@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrito de Reservaciones - Hotel Playa</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1><a href="index.html">🏖️ Hotel Playa</a></h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="habitaciones.html">Habitaciones</a></li>
+                <li class="dropdown admin-only hidden">
+                    <a href="#" class="dropdown-toggle">Administración</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="admin-habitaciones.html">Habitaciones</a></li>
+                        <li><a href="admin-usuarios.html">Usuarios</a></li>
+                    </ul>
+                </li>
+                <li><a href="mis-reservaciones.html">Mis Reservaciones</a></li>
+                <li><a href="#" id="btnCerrarSesion">Cerrar Sesión</a></li>
+            </ul>
+            <div class="user-info" id="userInfo">
+                <span id="userName"></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-header">
+        <div class="container">
+            <h1>🛒 Carrito de Reservaciones</h1>
+            <p>Revisa y confirma tu reservación</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="alert hidden" id="alertMessage"></div>
+
+        <div class="cart-container">
+            <!-- Fechas de Reservación -->
+            <div class="cart-section">
+                <h2>Fechas de Estadía</h2>
+                <form id="formFechas" class="dates-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fecha_entrada">Fecha de Entrada *</label>
+                            <input type="date" id="fecha_entrada" name="fecha_entrada" class="form-control" required>
+                            <span class="error-message" id="errorFechaEntrada"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="fecha_salida">Fecha de Salida *</label>
+                            <input type="date" id="fecha_salida" name="fecha_salida" class="form-control" required>
+                            <span class="error-message" id="errorFechaSalida"></span>
+                        </div>
+                    </div>
+                    <div class="nights-info">
+                        <strong>Número de noches:</strong> <span id="numeroNoches">0</span>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Habitaciones en el carrito -->
+            <div class="cart-section">
+                <h2>Habitaciones Seleccionadas</h2>
+                <div id="carritoVacio" class="empty-cart">
+                    <p>Tu carrito está vacío</p>
+                    <a href="habitaciones.html" class="btn btn-primary">Ver Habitaciones</a>
+                </div>
+                <div id="carritoItems" class="cart-items hidden">
+                    <!-- Los items del carrito se cargarán dinámicamente -->
+                </div>
+            </div>
+
+            <!-- Resumen de Costos -->
+            <div class="cart-section" id="resumenCostos" style="display: none;">
+                <h2>Resumen de Costos</h2>
+                <div class="cost-summary">
+                    <div class="cost-row">
+                        <span>Subtotal:</span>
+                        <span id="subtotal">$0.00</span>
+                    </div>
+                    <div class="cost-row">
+                        <span>Impuestos (16%):</span>
+                        <span id="impuestos">$0.00</span>
+                    </div>
+                    <div class="cost-row total">
+                        <span><strong>Total:</strong></span>
+                        <span id="total"><strong>$0.00</strong></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="notas">Notas o Solicitudes Especiales</label>
+                    <textarea id="notas" name="notas" class="form-control" rows="3" placeholder="Comentarios adicionales sobre tu reservación..."></textarea>
+                </div>
+
+                <div class="cart-actions">
+                    <button class="btn btn-primary btn-large" id="btnProcesarReservacion">
+                        Confirmar y Pagar Reservación
+                    </button>
+                    <a href="habitaciones.html" class="btn btn-secondary">Continuar Buscando</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación de pago -->
+    <div class="modal" id="modalConfirmarPago">
+        <div class="modal-content">
+            <h2>Confirmar Reservación</h2>
+            <div id="modalBody">
+                <p>¿Estás seguro de que deseas procesar esta reservación?</p>
+                <div class="cost-summary">
+                    <div class="cost-row">
+                        <span>Total a pagar:</span>
+                        <span id="totalModal">$0.00</span>
+                    </div>
+                    <div class="cost-row">
+                        <span>Noches:</span>
+                        <span id="nochesModal">0</span>
+                    </div>
+                </div>
+                <p class="warning-text">Esta acción descontará las habitaciones del inventario disponible.</p>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-primary" id="btnConfirmarPago">Sí, Procesar Reservación</button>
+                <button class="btn btn-secondary" id="btnCancelarPago">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Hotel Playa</h3>
+                    <p>Tu paraíso junto al mar</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Contacto</h3>
+                    <p>📞 (555) 123-4567</p>
+                    <p>📧 info@hotelplaya.com</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Hotel Playa. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/auth.js"></script>
+    <script src="js/carrito.js"></script>
+    <script src="js/validaciones.js"></script>
+    <script src="js/carrito-page.js"></script>
+</body>
+</html>

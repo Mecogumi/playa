@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrar Usuarios - Hotel Playa</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1><a href="index.html">🏖️ Hotel Playa</a></h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="habitaciones.html">Habitaciones</a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle">Administración</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="admin-habitaciones.html">Habitaciones</a></li>
+                        <li><a href="admin-usuarios.html" class="active">Usuarios</a></li>
+                    </ul>
+                </li>
+                <li><a href="#" id="btnCerrarSesion">Cerrar Sesión</a></li>
+            </ul>
+            <div class="user-info" id="userInfo">
+                <span id="userName"></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-header">
+        <div class="container">
+            <h1>Administración de Usuarios</h1>
+            <p>Gestiona los usuarios del sistema</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="admin-actions">
+            <button class="btn btn-primary" id="btnNuevoUsuario">
+                ➕ Agregar Nuevo Usuario
+            </button>
+        </div>
+
+        <div class="alert hidden" id="alertMessage"></div>
+
+        <!-- Filtros -->
+        <div class="filters-section">
+            <div class="status-filters">
+                <button class="filter-btn active" data-tipo="todos">Todos</button>
+                <button class="filter-btn" data-tipo="admin">Administradores</button>
+                <button class="filter-btn" data-tipo="huesped">Huéspedes</button>
+                <button class="filter-btn" data-tipo="activo">Solo Activos</button>
+                <button class="filter-btn" data-tipo="inactivo">Solo Inactivos</button>
+            </div>
+        </div>
+
+        <!-- Tabla de usuarios -->
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Usuario</th>
+                        <th>Nombre Completo</th>
+                        <th>Email</th>
+                        <th>Teléfono</th>
+                        <th>Tipo</th>
+                        <th>Estado</th>
+                        <th>Fecha Registro</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaUsuarios">
+                    <!-- Los usuarios se cargarán dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal para agregar/editar usuario -->
+    <div class="modal" id="modalUsuario">
+        <div class="modal-content modal-large">
+            <span class="close" id="closeModalUsuario">&times;</span>
+            <h2 id="modalTitle">Agregar Usuario</h2>
+
+            <form id="formUsuario" class="admin-form">
+                <input type="hidden" id="id_usuario" name="id_usuario">
+                <input type="hidden" id="accion" name="accion" value="crear">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nombre_usuario">Nombre de Usuario *</label>
+                        <input type="text" id="nombre_usuario" name="nombre_usuario" class="form-control" required minlength="4">
+                        <span class="error-message" id="errorNombreUsuario"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tipo_usuario">Tipo de Usuario *</label>
+                        <select id="tipo_usuario" name="tipo_usuario" class="form-control" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="admin">Administrador</option>
+                            <option value="huesped">Huésped</option>
+                            <option value="no_registrado">No Registrado</option>
+                        </select>
+                        <span class="error-message" id="errorTipoUsuario"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="nombre_completo">Nombre Completo *</label>
+                    <input type="text" id="nombre_completo" name="nombre_completo" class="form-control" required>
+                    <span class="error-message" id="errorNombreCompleto"></span>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email">Correo Electrónico *</label>
+                        <input type="email" id="email" name="email" class="form-control" required>
+                        <span class="error-message" id="errorEmail"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="telefono">Teléfono</label>
+                        <input type="tel" id="telefono" name="telefono" class="form-control" placeholder="(555) 123-4567">
+                        <span class="error-message" id="errorTelefono"></span>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="contrasena" id="labelContrasena">Contraseña *</label>
+                        <input type="password" id="contrasena" name="contrasena" class="form-control" minlength="6">
+                        <span class="error-message" id="errorContrasena"></span>
+                        <small id="helpContrasena">Mínimo 6 caracteres</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmar_contrasena" id="labelConfirmarContrasena">Confirmar Contraseña *</label>
+                        <input type="password" id="confirmar_contrasena" name="confirmar_contrasena" class="form-control" minlength="6">
+                        <span class="error-message" id="errorConfirmarContrasena"></span>
+                    </div>
+                </div>
+
+                <div class="form-group" id="seccionEstado" style="display: none;">
+                    <label for="activo">Estado del Usuario *</label>
+                    <select id="activo" name="activo" class="form-control">
+                        <option value="1">Activo (puede acceder al sistema)</option>
+                        <option value="0">Inactivo (bloqueado)</option>
+                    </select>
+                    <small>Los usuarios inactivos no podrán iniciar sesión</small>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="btnGuardar">Guardar</button>
+                    <button type="button" class="btn btn-secondary" id="btnCancelar">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación -->
+    <div class="modal" id="modalConfirmar">
+        <div class="modal-content modal-small">
+            <h3>Confirmar Acción</h3>
+            <p id="mensajeConfirmacion"></p>
+            <div class="form-actions">
+                <button class="btn btn-danger" id="btnConfirmarAccion">Confirmar</button>
+                <button class="btn btn-secondary" id="btnCancelarAccion">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2024 Hotel Playa. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/auth.js"></script>
+    <script src="js/validaciones.js"></script>
+    <script src="js/admin-usuarios.js"></script>
+</body>
+</html>

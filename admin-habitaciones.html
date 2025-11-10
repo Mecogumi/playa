@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrar Habitaciones - Hotel Playa</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1><a href="index.html">🏖️ Hotel Playa</a></h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="habitaciones.html">Habitaciones</a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle">Administración</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="admin-habitaciones.html" class="active">Habitaciones</a></li>
+                        <li><a href="admin-usuarios.html">Usuarios</a></li>
+                    </ul>
+                </li>
+                <li><a href="#" id="btnCerrarSesion">Cerrar Sesión</a></li>
+            </ul>
+            <div class="user-info" id="userInfo">
+                <span id="userName"></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-header">
+        <div class="container">
+            <h1>Administración de Habitaciones</h1>
+            <p>Gestiona el catálogo de habitaciones del hotel</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="admin-actions">
+            <button class="btn btn-primary" id="btnNuevaHabitacion">
+                ➕ Agregar Nueva Habitación
+            </button>
+        </div>
+
+        <div class="alert hidden" id="alertMessage"></div>
+
+        <!-- Tabla de habitaciones -->
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Número</th>
+                        <th>Nombre</th>
+                        <th>Categoría</th>
+                        <th>Precio/Noche</th>
+                        <th>Capacidad</th>
+                        <th>Disponibles</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaHabitaciones">
+                    <!-- Las habitaciones se cargarán dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal para agregar/editar habitación -->
+    <div class="modal" id="modalHabitacion">
+        <div class="modal-content modal-large">
+            <span class="close" id="closeModalHabitacion">&times;</span>
+            <h2 id="modalTitle">Agregar Habitación</h2>
+
+            <form id="formHabitacion" class="admin-form">
+                <input type="hidden" id="id_habitacion" name="id_habitacion">
+                <input type="hidden" id="accion" name="accion" value="crear">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="numero_habitacion">Número de Habitación *</label>
+                        <input type="text" id="numero_habitacion" name="numero_habitacion" class="form-control" required>
+                        <span class="error-message" id="errorNumeroHabitacion"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_categoria">Categoría *</label>
+                        <select id="id_categoria" name="id_categoria" class="form-control" required>
+                            <option value="">Seleccionar...</option>
+                            <!-- Las categorías se cargarán dinámicamente -->
+                        </select>
+                        <span class="error-message" id="errorCategoria"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="nombre">Nombre *</label>
+                    <input type="text" id="nombre" name="nombre" class="form-control" required>
+                    <span class="error-message" id="errorNombre"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="descripcion">Descripción</label>
+                    <textarea id="descripcion" name="descripcion" class="form-control" rows="3"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="precio_noche">Precio por Noche *</label>
+                        <input type="number" id="precio_noche" name="precio_noche" class="form-control" step="0.01" min="0" required>
+                        <span class="error-message" id="errorPrecio"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="capacidad_personas">Capacidad (personas) *</label>
+                        <input type="number" id="capacidad_personas" name="capacidad_personas" class="form-control" min="1" required>
+                        <span class="error-message" id="errorCapacidad"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cantidad_disponible">Cantidad Disponible *</label>
+                        <input type="number" id="cantidad_disponible" name="cantidad_disponible" class="form-control" min="0" required>
+                        <span class="error-message" id="errorCantidad"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="caracteristicas">Características</label>
+                    <textarea id="caracteristicas" name="caracteristicas" class="form-control" rows="3" placeholder="TV, WiFi, Aire acondicionado, etc."></textarea>
+                </div>
+
+                <div class="form-group" id="seccionEstado" style="display: none;">
+                    <label for="activo">Estado de la Habitación *</label>
+                    <select id="activo" name="activo" class="form-control">
+                        <option value="1">Activo (visible para reservaciones)</option>
+                        <option value="0">Inactivo (oculto)</option>
+                    </select>
+                    <small>Las habitaciones inactivas no aparecerán en el catálogo público</small>
+                </div>
+
+                <div class="form-group" id="seccionImagenes">
+                    <label>Imágenes Actuales</label>
+                    <div class="images-gallery" id="imagenesActuales">
+                        <!-- Las imágenes se mostrarán aquí -->
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="imagenes">Agregar Imágenes</label>
+                    <input type="file" id="imagenes" name="imagenes" class="form-control" accept="image/*" multiple>
+                    <small>Puedes seleccionar múltiples imágenes (JPG, PNG, GIF, WebP - Máx. 5MB c/u)</small>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="btnGuardar">Guardar</button>
+                    <button type="button" class="btn btn-secondary" id="btnCancelar">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación -->
+    <div class="modal" id="modalConfirmar">
+        <div class="modal-content modal-small">
+            <h3>Confirmar Acción</h3>
+            <p id="mensajeConfirmacion"></p>
+            <div class="form-actions">
+                <button class="btn btn-danger" id="btnConfirmarAccion">Confirmar</button>
+                <button class="btn btn-secondary" id="btnCancelarAccion">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2024 Hotel Playa. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+    <script src="js/carrito.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/validaciones.js"></script>
+    <script src="js/admin-habitaciones.js"></script>
+</body>
+</html>

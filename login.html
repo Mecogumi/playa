@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Hotel Playa</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1><a href="index.html">🏖️ Hotel Playa</a></h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="habitaciones.html">Habitaciones</a></li>
+                <li><a href="registro.html">Registrarse</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="auth-container">
+        <div class="auth-box">
+            <h2>Iniciar Sesión</h2>
+            <p class="auth-subtitle">Accede a tu cuenta para gestionar tus reservaciones</p>
+
+            <div class="alert hidden" id="alertMessage"></div>
+
+            <form id="formLogin" class="auth-form">
+                <div class="form-group">
+                    <label for="usuario">Usuario</label>
+                    <input type="text" id="usuario" name="usuario" class="form-control" required>
+                    <span class="error-message" id="errorUsuario"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="contrasena">Contraseña</label>
+                    <input type="password" id="contrasena" name="contrasena" class="form-control" required>
+                    <span class="error-message" id="errorContrasena"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" id="btnSubmit">
+                    Iniciar Sesión
+                </button>
+
+                <div class="form-footer">
+                    <p>¿No tienes cuenta? <a href="registro.html">Regístrate aquí</a></p>
+                </div>
+            </form>
+
+            <div class="demo-credentials">
+                <h3>Credenciales de Prueba</h3>
+                <div class="demo-box">
+                    <p><strong>Administrador:</strong></p>
+                    <p>Usuario: admin</p>
+                    <p>Contraseña: admin123</p>
+                </div>
+                <div class="demo-box">
+                    <p><strong>Huésped:</strong></p>
+                    <p>Usuario: huesped1</p>
+                    <p>Contraseña: huesped123</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2024 Hotel Playa. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/auth.js"></script>
+    <script src="js/validaciones.js"></script>
+    <script src="js/login.js"></script>
+</body>
+</html>

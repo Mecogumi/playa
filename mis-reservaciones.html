@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Reservaciones - Hotel Playa</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1><a href="index.html">🏖️ Hotel Playa</a></h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Inicio</a></li>
+                <li><a href="habitaciones.html">Habitaciones</a></li>
+                <li class="dropdown admin-only hidden">
+                    <a href="#" class="dropdown-toggle">Administración</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="admin-habitaciones.html">Habitaciones</a></li>
+                        <li><a href="admin-usuarios.html">Usuarios</a></li>
+                    </ul>
+                </li>
+                <li><a href="mis-reservaciones.html" class="active">Mis Reservaciones</a></li>
+                <li><a href="carrito.html" class="huesped-only">🛒 Carrito <span class="cart-badge" id="cartBadge">0</span></a></li>
+                <li><a href="#" id="btnCerrarSesion">Cerrar Sesión</a></li>
+            </ul>
+            <div class="user-info" id="userInfo">
+                <span id="userName"></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-header">
+        <div class="container">
+            <h1>Mis Reservaciones</h1>
+            <p>Gestiona y revisa tus reservaciones</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="alert hidden" id="alertMessage"></div>
+
+        <!-- Filtros de estado -->
+        <div class="filters-section">
+            <div class="status-filters">
+                <button class="filter-btn active" data-estado="todas">Todas</button>
+                <button class="filter-btn" data-estado="confirmada">Confirmadas</button>
+                <button class="filter-btn" data-estado="pendiente">Pendientes</button>
+                <button class="filter-btn" data-estado="cancelada">Canceladas</button>
+                <button class="filter-btn" data-estado="completada">Completadas</button>
+            </div>
+        </div>
+
+        <!-- Listado de reservaciones -->
+        <div id="reservacionesContainer">
+            <div class="loading" id="loading">Cargando reservaciones...</div>
+            <div class="empty-message hidden" id="emptyMessage">
+                <p>No tienes reservaciones aún</p>
+                <a href="habitaciones.html" class="btn btn-primary">Hacer una Reservación</a>
+            </div>
+            <div id="reservacionesList">
+                <!-- Las reservaciones se cargarán dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de detalles de reservación -->
+    <div class="modal" id="modalDetalles">
+        <div class="modal-content modal-large">
+            <span class="close" id="closeModal">&times;</span>
+            <div id="modalBody">
+                <!-- El contenido se cargará dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación -->
+    <div class="modal" id="modalConfirmar">
+        <div class="modal-content modal-small">
+            <h3>Confirmar Cancelación</h3>
+            <p id="mensajeConfirmacion">¿Estás seguro de que deseas cancelar esta reservación?</p>
+            <p class="warning-text">Esta acción devolverá las habitaciones al inventario disponible.</p>
+            <div class="form-actions">
+                <button class="btn btn-danger" id="btnConfirmarAccion">Sí, Cancelar Reservación</button>
+                <button class="btn btn-secondary" id="btnCancelarAccion">No, Mantener Reservación</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Hotel Playa</h3>
+                    <p>Tu paraíso junto al mar</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Contacto</h3>
+                    <p>📞 (555) 123-4567</p>
+                    <p>📧 info@hotelplaya.com</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Hotel Playa. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+    <script src="js/validaciones.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/carrito.js"></script>
+    <script src="js/mis-reservaciones.js"></script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Playa - Sistema de Reservaciones</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Navegación -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>🏖️ Hotel Playa</h1>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="index.html" class="active">Inicio</a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle">Habitaciones</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="habitaciones.html">Ver Todas</a></li>
+                        <li><a href="habitaciones.html?categoria=1">Estándar</a></li>
+                        <li><a href="habitaciones.html?categoria=2">Deluxe</a></li>
+                        <li><a href="habitaciones.html?categoria=3">Suite</a></li>
+                        <li><a href="habitaciones.html?categoria=4">Presidencial</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown admin-only hidden">
+                    <a href="#" class="dropdown-toggle">Administración</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="admin-habitaciones.html">Habitaciones</a></li>
+                        <li><a href="admin-usuarios.html">Usuarios</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown auth-menu">
+                    <a href="#" class="dropdown-toggle">Mi Cuenta</a>
+                    <ul class="dropdown-menu">
+                        <li class="guest-only"><a href="login.html">Iniciar Sesión</a></li>
+                        <li class="guest-only"><a href="registro.html">Registrarse</a></li>
+                        <li class="auth-only hidden"><a href="mis-reservaciones.html">Mis Reservaciones</a></li>
+                        <li class="auth-only hidden"><a href="#" id="btnCerrarSesion">Cerrar Sesión</a></li>
+                    </ul>
+                </li>
+                <li class="huesped-only hidden">
+                    <a href="carrito.html" class="cart-link">
+                        🛒 Carrito <span class="cart-badge" id="cartBadge">0</span>
+                    </a>
+                </li>
+            </ul>
+            <div class="user-info hidden" id="userInfo">
+                <span id="userName"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Bienvenido a Hotel Playa</h1>
+            <p>Tu destino perfecto para unas vacaciones inolvidables</p>
+            <div class="hero-buttons">
+                <a href="habitaciones.html" class="btn btn-primary">Ver Habitaciones</a>
+                <a href="registro.html" class="btn btn-secondary guest-only">Registrarse</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Búsqueda -->
+    <section class="search-section">
+        <div class="container">
+            <div class="search-box">
+                <h2>Buscar Habitaciones</h2>
+                <form id="formBusqueda" class="search-form">
+                    <div class="form-group">
+                        <input type="text" id="searchTerm" placeholder="Buscar por nombre, categoría o características..." class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Buscar</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Categorías -->
+    <section class="categories-section">
+        <div class="container">
+            <h2 class="section-title">Nuestras Categorías</h2>
+            <div class="categories-grid" id="categoriasGrid">
+                <!-- Las categorías se cargarán dinámicamente -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Habitaciones Destacadas -->
+    <section class="featured-rooms">
+        <div class="container">
+            <h2 class="section-title">Habitaciones Destacadas</h2>
+            <div class="rooms-grid" id="habitacionesGrid">
+                <!-- Las habitaciones se cargarán dinámicamente -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Hotel Playa</h3>
+                    <p>Tu paraíso junto al mar</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Contacto</h3>
+                    <p>📞 (555) 123-4567</p>
+                    <p>📧 info@hotelplaya.com</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Ubicación</h3>
+                    <p>Av. Costera 123</p>
+                    <p>Playa del Carmen, México</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Hotel Playa. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal para detalles de habitación -->
+    <div class="modal" id="modalDetalles">
+        <div class="modal-content">
+            <span class="close" id="closeModal">&times;</span>
+            <div id="modalBody">
+                <!-- El contenido se cargará dinámicamente -->
+            </div>
+        </div>
+    </div>
+    <script src="js/validaciones.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/carrito.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
