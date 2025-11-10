@@ -123,6 +123,7 @@ function actualizarUI() {
     const adminOnly = document.querySelectorAll('.admin-only');
     const huespedOnly = document.querySelectorAll('.huesped-only');
     const userInfo = document.getElementById('userInfo');
+    const guestInfo = document.getElementById('guestInfo');
     const userName = document.getElementById('userName');
 
     if (usuario) {
@@ -139,6 +140,7 @@ function actualizarUI() {
         }
 
         if (userInfo) userInfo.classList.remove('hidden');
+        if (guestInfo) guestInfo.classList.add('hidden');
         if (userName) userName.textContent = usuario.nombre_completo;
 
     } else {
@@ -149,6 +151,7 @@ function actualizarUI() {
         huespedOnly.forEach(el => el.classList.add('hidden'));
 
         if (userInfo) userInfo.classList.add('hidden');
+        if (guestInfo) guestInfo.classList.remove('hidden');
     }
 }
 

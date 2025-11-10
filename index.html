@@ -11,7 +11,7 @@
     <nav class="navbar">
         <div class="container">
             <div class="nav-brand">
-                <h1>🏖️ Hotel Playa</h1>
+                <h1><a href="index.html">🏖️ Hotel Playa</a></h1>
             </div>
             <ul class="nav-menu" id="navMenu">
                 <li><a href="index.html" class="active">Inicio</a></li>
@@ -32,23 +32,25 @@
                         <li><a href="admin-usuarios.html">Usuarios</a></li>
                     </ul>
                 </li>
-                <li class="dropdown auth-menu">
-                    <a href="#" class="dropdown-toggle">Mi Cuenta</a>
-                    <ul class="dropdown-menu">
-                        <li class="guest-only"><a href="login.html">Iniciar Sesión</a></li>
-                        <li class="guest-only"><a href="registro.html">Registrarse</a></li>
-                        <li class="auth-only hidden"><a href="mis-reservaciones.html">Mis Reservaciones</a></li>
-                        <li class="auth-only hidden"><a href="#" id="btnCerrarSesion">Cerrar Sesión</a></li>
-                    </ul>
-                </li>
                 <li class="huesped-only hidden">
                     <a href="carrito.html" class="cart-link">
                         🛒 Carrito <span class="cart-badge" id="cartBadge">0</span>
                     </a>
                 </li>
             </ul>
-            <div class="user-info hidden" id="userInfo">
-                <span id="userName"></span>
+            <div class="user-info hidden dropdown" id="userInfo">
+                <a href="#" class="dropdown-toggle" id="userName"></a>
+                <ul class="dropdown-menu">
+                    <li class="auth-only hidden"><a href="mis-reservaciones.html">Mis Reservaciones</a></li>
+                    <li class="auth-only hidden"><a href="#" id="btnCerrarSesion">Cerrar Sesión</a></li>
+                </ul>
+            </div>
+            <div class="guest-info dropdown" id="guestInfo">
+                <a href="#" class="dropdown-toggle">Mi Cuenta</a>
+                <ul class="dropdown-menu">
+                    <li><a href="login.html">Iniciar Sesión</a></li>
+                    <li><a href="registro.html">Registrarse</a></li>
+                </ul>
             </div>
         </div>
     </nav>

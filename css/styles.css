@@ -126,7 +126,7 @@ img {
     border-radius: 4px;
     list-style: none;
     padding: 0.5rem 0;
-    margin-top: 0.5rem;
+    margin-top: 0;
 }
 
 .dropdown:hover .dropdown-menu {
@@ -147,9 +147,21 @@ img {
     background-color: var(--light);
 }
 
-.user-info {
+.user-info,
+.guest-info {
     color: var(--white);
     font-weight: bold;
+}
+
+.user-info >a,
+.guest-info >a {
+    color: var(--white);
+}
+
+.user-info .dropdown-menu,
+.guest-info .dropdown-menu {
+    right: 0;
+    left: auto;
 }
 
 .cart-link {

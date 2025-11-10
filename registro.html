@@ -14,9 +14,43 @@
             </div>
             <ul class="nav-menu">
                 <li><a href="index.html">Inicio</a></li>
-                <li><a href="habitaciones.html">Habitaciones</a></li>
-                <li><a href="login.html">Iniciar Sesión</a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle">Habitaciones</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="habitaciones.html">Ver Todas</a></li>
+                        <li><a href="habitaciones.html?categoria=1">Estándar</a></li>
+                        <li><a href="habitaciones.html?categoria=2">Deluxe</a></li>
+                        <li><a href="habitaciones.html?categoria=3">Suite</a></li>
+                        <li><a href="habitaciones.html?categoria=4">Presidencial</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown admin-only hidden">
+                    <a href="#" class="dropdown-toggle">Administración</a>
+                    <ul class="dropdown-menu">
+                        <li><a href="admin-habitaciones.html">Habitaciones</a></li>
+                        <li><a href="admin-usuarios.html">Usuarios</a></li>
+                    </ul>
+                </li>
+                <li class="huesped-only hidden">
+                    <a href="carrito.html" class="cart-link">
+                        🛒 Carrito <span class="cart-badge" id="cartBadge">0</span>
+                    </a>
+                </li>
             </ul>
+            <div class="user-info hidden dropdown" id="userInfo">
+                <a href="#" class="dropdown-toggle" id="userName"></a>
+                <ul class="dropdown-menu">
+                    <li class="auth-only hidden"><a href="mis-reservaciones.html">Mis Reservaciones</a></li>
+                    <li class="auth-only hidden"><a href="#" id="btnCerrarSesion">Cerrar Sesión</a></li>
+                </ul>
+            </div>
+            <div class="guest-info dropdown" id="guestInfo">
+                <a href="#" class="dropdown-toggle">Mi Cuenta</a>
+                <ul class="dropdown-menu">
+                    <li><a href="login.html">Iniciar Sesión</a></li>
+                    <li><a href="registro.html" class="active">Registrarse</a></li>
+                </ul>
+            </div>
         </div>
     </nav>
 
@@ -84,8 +118,9 @@
         </div>
     </footer>
 
-    <script src="js/auth.js"></script>
     <script src="js/validaciones.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/carrito.js"></script>
     <script src="js/registro.js"></script>
 </body>
 </html>
