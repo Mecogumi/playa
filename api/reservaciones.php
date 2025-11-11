@@ -86,15 +86,39 @@ function verificarUsuario() {
  */
 function crearReservacion($datos) {
     // Validar datos requeridos
-    if (empty($datos['fecha_entrada']) || empty($datos['fecha_salida']) || empty($datos['habitaciones'])) {
+    if (empty($datos['fecha_entrada']) || empty($datos['fecha_salida'])) {
         respuestaError('Faltan datos requeridos para la reservación');
         return;
     }
 
-    // Validar que hay habitaciones en el carrito
-    if (!is_array($datos['habitaciones']) || count($datos['habitaciones']) === 0) {
-        respuestaError('No hay habitaciones seleccionadas');
+    // Leer habitaciones desde la cookie HTTP
+    if (!isset($_COOKIE['carrito_habitaciones']) || empty($_COOKIE['carrito_habitaciones'])) {
+        respuestaError('No hay habitaciones en el carrito (cookie no encontrada)');
         return;
+    }
+
+    // Decodificar el JSON de la cookie
+    $carritoCompleto = json_decode($_COOKIE['carrito_habitaciones'], true);
+
+    if (!is_array($carritoCompleto) || count($carritoCompleto) === 0) {
+        respuestaError('El carrito está vacío o tiene un formato inválido');
+        return;
+    }
+
+    // Extraer solo los campos necesarios (id_habitacion y cantidad)
+    $habitaciones = array_map(function($item) {
+        return [
+            'id_habitacion' => isset($item['id_habitacion']) ? intval($item['id_habitacion']) : 0,
+            'cantidad' => isset($item['cantidad']) ? intval($item['cantidad']) : 0
+        ];
+    }, $carritoCompleto);
+
+    // Validar que todas las habitaciones tengan datos válidos
+    foreach ($habitaciones as $hab) {
+        if ($hab['id_habitacion'] <= 0 || $hab['cantidad'] <= 0) {
+            respuestaError('Datos de habitaciones inválidos en el carrito');
+            return;
+        }
     }
 
     $conn = obtenerConexion();
@@ -123,8 +147,8 @@ function crearReservacion($datos) {
         $subtotal = 0;
         $detalles = [];
 
-        // Procesar cada habitación del carrito
-        foreach ($datos['habitaciones'] as $habitacion) {
+        // Procesar cada habitación del carrito (desde la cookie HTTP)
+        foreach ($habitaciones as $habitacion) {
             $idHabitacion = $habitacion['id_habitacion'];
             $cantidad = $habitacion['cantidad'];
 

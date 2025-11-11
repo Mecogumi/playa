@@ -184,14 +184,20 @@ async function procesarReservacion() {
     const notas = document.getElementById('notas').value;
     const carrito = obtenerCarrito();
 
+    // Verificar que hay habitaciones en el carrito
+    if (carrito.length === 0) {
+        alert('El carrito está vacío');
+        btnConfirmar.disabled = false;
+        btnConfirmar.textContent = 'Sí, Procesar Reservación';
+        return;
+    }
+
+    // Las habitaciones se envían mediante cookie HTTP automáticamente
+    // No es necesario incluirlas en el body
     const datos = {
         fecha_entrada: fechaEntrada,
         fecha_salida: fechaSalida,
-        notas: notas,
-        habitaciones: carrito.map(item => ({
-            id_habitacion: item.id_habitacion,
-            cantidad: item.cantidad
-        }))
+        notas: notas
     };
 
     try {
