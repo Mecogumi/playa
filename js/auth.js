@@ -1,16 +1,7 @@
-/**
- * auth.js
- * Maneja la autenticación y gestión de sesión
- */
-
 const API_BASE = 'api/';
-
-// Verificar sesión al cargar la página
 document.addEventListener('DOMContentLoaded', async () => {
     await verificarSesion();
     actualizarUI();
-
-    // Agregar evento al botón de cerrar sesión si existe
     const btnCerrarSesion = document.getElementById('btnCerrarSesion');
     if (btnCerrarSesion) {
         btnCerrarSesion.addEventListener('click', (e) => {
@@ -19,10 +10,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 });
-
-/**
- * Verifica si hay una sesión activa
- */
 async function verificarSesion() {
     try {
         const response = await fetch(`${API_BASE}auth.php?accion=verificar`, {
@@ -33,11 +20,9 @@ async function verificarSesion() {
         const data = await response.json();
 
         if (data.success) {
-            // Guardar información del usuario en localStorage
             localStorage.setItem('usuario', JSON.stringify(data.data.usuario));
             return data.data.usuario;
         } else {
-            // No hay sesión activa
             localStorage.removeItem('usuario');
             return null;
         }
@@ -47,41 +32,21 @@ async function verificarSesion() {
         return null;
     }
 }
-
-/**
- * Obtiene el usuario actual desde localStorage
- */
 function obtenerUsuarioActual() {
     const usuarioStr = localStorage.getItem('usuario');
     return usuarioStr ? JSON.parse(usuarioStr) : null;
 }
-
-/**
- * Verifica si el usuario está autenticado
- */
 function estaAutenticado() {
     return obtenerUsuarioActual() !== null;
 }
-
-/**
- * Verifica si el usuario es administrador
- */
 function esAdmin() {
     const usuario = obtenerUsuarioActual();
     return usuario && usuario.tipo === 'admin';
 }
-
-/**
- * Verifica si el usuario es huésped
- */
 function esHuesped() {
     const usuario = obtenerUsuarioActual();
     return usuario && usuario.tipo === 'huesped';
 }
-
-/**
- * Cierra la sesión del usuario
- */
 async function cerrarSesion() {
     if (!confirm('¿Estás seguro de que deseas cerrar sesión?')) {
         return;
@@ -97,7 +62,6 @@ async function cerrarSesion() {
 
         if (data.success) {
             localStorage.removeItem('usuario');
-            // Limpiar carrito también
             if (typeof limpiarCarrito === 'function') {
                 limpiarCarrito();
             }
@@ -110,14 +74,8 @@ async function cerrarSesion() {
         alert('Error al cerrar sesión');
     }
 }
-
-/**
- * Actualiza la UI según el estado de autenticación
- */
 function actualizarUI() {
     const usuario = obtenerUsuarioActual();
-
-    // Elementos de navegación
     const guestOnly = document.querySelectorAll('.guest-only');
     const authOnly = document.querySelectorAll('.auth-only');
     const adminOnly = document.querySelectorAll('.admin-only');
@@ -127,7 +85,6 @@ function actualizarUI() {
     const userName = document.getElementById('userName');
 
     if (usuario) {
-        // Usuario autenticado
         guestOnly.forEach(el => el.classList.add('hidden'));
         authOnly.forEach(el => el.classList.remove('hidden'));
 
@@ -144,7 +101,6 @@ function actualizarUI() {
         if (userName) userName.textContent = usuario.nombre_completo;
 
     } else {
-        // Usuario no autenticado
         guestOnly.forEach(el => el.classList.remove('hidden'));
         authOnly.forEach(el => el.classList.add('hidden'));
         adminOnly.forEach(el => el.classList.add('hidden'));
@@ -154,10 +110,6 @@ function actualizarUI() {
         if (guestInfo) guestInfo.classList.remove('hidden');
     }
 }
-
-/**
- * Redirige a login si no está autenticado
- */
 function requerirAutenticacion(tipoRequerido = null) {
     const usuario = obtenerUsuarioActual();
 
@@ -175,10 +127,6 @@ function requerirAutenticacion(tipoRequerido = null) {
 
     return true;
 }
-
-/**
- * Realiza una petición autenticada a la API
- */
 async function fetchAutenticado(url, options = {}) {
     const defaultOptions = {
         credentials: 'include',
@@ -192,8 +140,6 @@ async function fetchAutenticado(url, options = {}) {
     try {
         const response = await fetch(url, finalOptions);
         const data = await response.json();
-
-        // Si la sesión expiró, redirigir a login
         if (!data.success && response.status === 401) {
             localStorage.removeItem('usuario');
             alert('Tu sesión ha expirado. Por favor inicia sesión nuevamente.');

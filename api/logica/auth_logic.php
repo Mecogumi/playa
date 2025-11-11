@@ -1,14 +1,7 @@
 <?php
-/**
- * Lógica de negocio para autenticación
- */
-
 require_once __DIR__ . '/../db.php';
 require_once __DIR__ . '/helpers.php';
 
-/**
- * Procesa el login de usuario
- */
 function login($datos) {
     if (empty($datos['usuario']) || empty($datos['contrasena'])) {
         respuestaError('Usuario y contraseña son requeridos');
@@ -35,14 +28,12 @@ function login($datos) {
 
     $usuario = $resultado[0];
 
-    // Verificar contraseña
     if (!verificarContrasena($datos['contrasena'], $usuario['contrasena'])) {
         cerrarConexion($conn);
         respuestaError('Credenciales incorrectas. Por favor verifica tu usuario y contraseña.');
         return;
     }
 
-    // Crear sesión
     $_SESSION['usuario_id'] = $usuario['id_usuario'];
     $_SESSION['usuario_nombre'] = $usuario['nombre_usuario'];
     $_SESSION['usuario_nombre_completo'] = $usuario['nombre_completo'];
@@ -66,9 +57,6 @@ function login($datos) {
     ]);
 }
 
-/**
- * Cierra la sesión del usuario
- */
 function logout() {
     @session_start();
     session_unset();
@@ -77,16 +65,12 @@ function logout() {
     respuestaExito(['mensaje' => 'Sesión cerrada exitosamente']);
 }
 
-/**
- * Verifica si hay una sesión activa
- */
 function verificarSesion() {
     if (!isset($_SESSION['sesion_iniciada']) || $_SESSION['sesion_iniciada'] !== true) {
         respuestaError('No hay sesión activa', 401);
         return;
     }
 
-    // Verificar timeout de sesión (30 minutos)
     if (isset($_SESSION['ultima_actividad']) && (time() - $_SESSION['ultima_actividad'] > 1800)) {
         session_unset();
         session_destroy();
@@ -108,24 +92,18 @@ function verificarSesion() {
     ]);
 }
 
-/**
- * Registra un nuevo usuario (huésped)
- */
 function registrarUsuario($datos) {
-    // Validar datos requeridos
     if (empty($datos['usuario']) || empty($datos['contrasena']) ||
         empty($datos['nombre_completo']) || empty($datos['email'])) {
         respuestaError('Todos los campos son requeridos');
         return;
     }
 
-    // Validar email
     if (!validarEmail($datos['email'])) {
         respuestaError('El email no es válido');
         return;
     }
 
-    // Validar longitud de contraseña
     if (strlen($datos['contrasena']) < 6) {
         respuestaError('La contraseña debe tener al menos 6 caracteres');
         return;
@@ -137,7 +115,6 @@ function registrarUsuario($datos) {
         return;
     }
 
-    // Verificar si el usuario ya existe
     $sqlVerificar = "SELECT id_usuario FROM usuarios WHERE nombre_usuario = ? OR email = ?";
     $resultado = ejecutarConsulta($conn, $sqlVerificar, "ss", [$datos['usuario'], $datos['email']]);
 
@@ -147,10 +124,8 @@ function registrarUsuario($datos) {
         return;
     }
 
-    // Hashear contraseña
     $hashContrasena = hashearContrasena($datos['contrasena']);
 
-    // Insertar usuario
     $sqlInsertar = "INSERT INTO usuarios (nombre_usuario, contrasena, nombre_completo, email, telefono, tipo_usuario)
                     VALUES (?, ?, ?, ?, ?, 'huesped')";
 

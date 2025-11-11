@@ -1,14 +1,7 @@
 <?php
-/**
- * Lógica de negocio para gestión de usuarios
- */
-
 require_once __DIR__ . '/../db.php';
 require_once __DIR__ . '/helpers.php';
 
-/**
- * Verifica si el usuario es administrador
- */
 function verificarAdmin() {
     if (!isset($_SESSION['sesion_iniciada']) || $_SESSION['sesion_iniciada'] !== true) {
         return false;
@@ -21,9 +14,6 @@ function verificarAdmin() {
     return true;
 }
 
-/**
- * Lista todos los usuarios
- */
 function listarUsuarios() {
     $conn = obtenerConexion();
     if (!$conn) {
@@ -42,9 +32,6 @@ function listarUsuarios() {
     respuestaExito(['usuarios' => $usuarios]);
 }
 
-/**
- * Obtiene un usuario específico
- */
 function obtenerUsuario($id) {
     if ($id <= 0) {
         respuestaError('ID de usuario no válido');
@@ -73,11 +60,7 @@ function obtenerUsuario($id) {
     respuestaExito(['usuario' => $resultado[0]]);
 }
 
-/**
- * Crea un nuevo usuario
- */
 function crearUsuario($datos) {
-    // Validar datos requeridos
     if (empty($datos['nombre_usuario']) || empty($datos['contrasena']) ||
         empty($datos['nombre_completo']) || empty($datos['email']) ||
         empty($datos['tipo_usuario'])) {
@@ -85,19 +68,16 @@ function crearUsuario($datos) {
         return;
     }
 
-    // Validar email
     if (!validarEmail($datos['email'])) {
         respuestaError('El email no es válido');
         return;
     }
 
-    // Validar longitud de contraseña
     if (strlen($datos['contrasena']) < 6) {
         respuestaError('La contraseña debe tener al menos 6 caracteres');
         return;
     }
 
-    // Validar tipo de usuario
     if (!in_array($datos['tipo_usuario'], ['admin', 'huesped', 'no_registrado'])) {
         respuestaError('Tipo de usuario no válido');
         return;
@@ -109,7 +89,6 @@ function crearUsuario($datos) {
         return;
     }
 
-    // Verificar si el usuario o email ya existe
     $sqlVerificar = "SELECT id_usuario FROM usuarios WHERE nombre_usuario = ? OR email = ?";
     $resultado = ejecutarConsulta($conn, $sqlVerificar, "ss", [$datos['nombre_usuario'], $datos['email']]);
 
@@ -119,10 +98,8 @@ function crearUsuario($datos) {
         return;
     }
 
-    // Hashear contraseña
     $hashContrasena = hashearContrasena($datos['contrasena']);
 
-    // Insertar usuario
     $sqlInsertar = "INSERT INTO usuarios (nombre_usuario, contrasena, nombre_completo, email, telefono, tipo_usuario, activo)
                     VALUES (?, ?, ?, ?, ?, ?, 1)";
 
@@ -149,16 +126,12 @@ function crearUsuario($datos) {
     }
 }
 
-/**
- * Actualiza un usuario existente
- */
 function actualizarUsuario($datos) {
     if (empty($datos['id_usuario'])) {
         respuestaError('ID de usuario es requerido');
         return;
     }
 
-    // Validar que no sea el usuario actual si intenta cambiar su propio tipo
     if ($datos['id_usuario'] == $_SESSION['usuario_id'] &&
         isset($datos['tipo_usuario']) && $datos['tipo_usuario'] !== 'admin') {
         respuestaError('No puedes cambiar tu propio tipo de usuario');
@@ -171,7 +144,6 @@ function actualizarUsuario($datos) {
         return;
     }
 
-    // Verificar si el email ya existe en otro usuario
     $sqlVerificar = "SELECT id_usuario FROM usuarios WHERE email = ? AND id_usuario != ?";
     $resultado = ejecutarConsulta($conn, $sqlVerificar, "si", [$datos['email'], $datos['id_usuario']]);
 
@@ -181,7 +153,6 @@ function actualizarUsuario($datos) {
         return;
     }
 
-    // Si se proporciona nueva contraseña, actualizarla
     if (!empty($datos['contrasena'])) {
         if (strlen($datos['contrasena']) < 6) {
             cerrarConexion($conn);
@@ -206,7 +177,6 @@ function actualizarUsuario($datos) {
             $datos['id_usuario']
         ]);
     } else {
-        // Actualizar sin cambiar contraseña
         $sqlActualizar = "UPDATE usuarios SET
                           nombre_completo = ?, email = ?, telefono = ?,
                           tipo_usuario = ?, activo = ?
@@ -231,16 +201,12 @@ function actualizarUsuario($datos) {
     }
 }
 
-/**
- * Elimina (desactiva) un usuario
- */
 function eliminarUsuario($id) {
     if ($id <= 0) {
         respuestaError('ID de usuario no válido');
         return;
     }
 
-    // No permitir eliminar el usuario actual
     if ($id == $_SESSION['usuario_id']) {
         respuestaError('No puedes eliminar tu propia cuenta');
         return;
@@ -264,16 +230,12 @@ function eliminarUsuario($id) {
     }
 }
 
-/**
- * Cambia el estado de un usuario (activo/inactivo)
- */
 function cambiarEstadoUsuario($datos) {
     if (empty($datos['id_usuario'])) {
         respuestaError('ID de usuario es requerido');
         return;
     }
 
-    // No permitir cambiar el estado del usuario actual
     if ($datos['id_usuario'] == $_SESSION['usuario_id']) {
         respuestaError('No puedes cambiar tu propio estado');
         return;

@@ -1,41 +1,21 @@
-/**
- * validaciones.js
- * Funciones de validación de formularios
- */
-
-/**
- * Valida que un campo no esté vacío
- */
 function validarRequerido(valor, nombreCampo = 'Este campo') {
     if (!valor || valor.trim() === '') {
         return `${nombreCampo} es requerido`;
     }
     return null;
 }
-
-/**
- * Valida la longitud mínima de un campo
- */
 function validarLongitudMinima(valor, minimo, nombreCampo = 'Este campo') {
     if (valor && valor.length < minimo) {
         return `${nombreCampo} debe tener al menos ${minimo} caracteres`;
     }
     return null;
 }
-
-/**
- * Valida la longitud máxima de un campo
- */
 function validarLongitudMaxima(valor, maximo, nombreCampo = 'Este campo') {
     if (valor && valor.length > maximo) {
         return `${nombreCampo} no debe exceder ${maximo} caracteres`;
     }
     return null;
 }
-
-/**
- * Valida un email
- */
 function validarEmail(email) {
     if (!email || email.trim() === '') {
         return 'El email es requerido';
@@ -48,10 +28,6 @@ function validarEmail(email) {
 
     return null;
 }
-
-/**
- * Valida un teléfono
- */
 function validarTelefono(telefono, requerido = false) {
     if (!telefono || telefono.trim() === '') {
         if (requerido) {
@@ -59,8 +35,6 @@ function validarTelefono(telefono, requerido = false) {
         }
         return null;
     }
-
-    // Permitir diferentes formatos de teléfono
     const regex = /^[\d\s\-\(\)\+]+$/;
     if (!regex.test(telefono)) {
         return 'El teléfono no es válido';
@@ -68,20 +42,12 @@ function validarTelefono(telefono, requerido = false) {
 
     return null;
 }
-
-/**
- * Valida que las contraseñas coincidan
- */
 function validarContrasenaCoincide(contrasena, confirmar) {
     if (contrasena !== confirmar) {
         return 'Las contraseñas no coinciden';
     }
     return null;
 }
-
-/**
- * Valida un número
- */
 function validarNumero(valor, nombreCampo = 'Este campo') {
     if (valor === '' || valor === null || valor === undefined) {
         return `${nombreCampo} es requerido`;
@@ -93,10 +59,6 @@ function validarNumero(valor, nombreCampo = 'Este campo') {
 
     return null;
 }
-
-/**
- * Valida un número positivo
- */
 function validarNumeroPositivo(valor, nombreCampo = 'Este campo') {
     const errorNumero = validarNumero(valor, nombreCampo);
     if (errorNumero) return errorNumero;
@@ -107,10 +69,6 @@ function validarNumeroPositivo(valor, nombreCampo = 'Este campo') {
 
     return null;
 }
-
-/**
- * Valida un rango numérico
- */
 function validarRango(valor, min, max, nombreCampo = 'Este campo') {
     const errorNumero = validarNumero(valor, nombreCampo);
     if (errorNumero) return errorNumero;
@@ -122,10 +80,6 @@ function validarRango(valor, min, max, nombreCampo = 'Este campo') {
 
     return null;
 }
-
-/**
- * Valida una fecha
- */
 function validarFecha(fecha, nombreCampo = 'La fecha') {
     if (!fecha || fecha.trim() === '') {
         return `${nombreCampo} es requerida`;
@@ -138,10 +92,6 @@ function validarFecha(fecha, nombreCampo = 'La fecha') {
 
     return null;
 }
-
-/**
- * Valida que una fecha sea futura
- */
 function validarFechaFutura(fecha, nombreCampo = 'La fecha') {
     const errorFecha = validarFecha(fecha, nombreCampo);
     if (errorFecha) return errorFecha;
@@ -156,10 +106,6 @@ function validarFechaFutura(fecha, nombreCampo = 'La fecha') {
 
     return null;
 }
-
-/**
- * Valida que una fecha sea posterior a otra
- */
 function validarFechaPosterior(fechaInicio, fechaFin, nombreInicio = 'La fecha de inicio', nombreFin = 'La fecha de fin') {
     const errorInicio = validarFecha(fechaInicio, nombreInicio);
     if (errorInicio) return errorInicio;
@@ -176,24 +122,16 @@ function validarFechaPosterior(fechaInicio, fechaFin, nombreInicio = 'La fecha d
 
     return null;
 }
-
-/**
- * Valida un archivo
- */
 function validarArchivo(archivo, extensionesPermitidas = [], tamanoMaxMB = 5) {
     if (!archivo) {
-        return null; // El archivo puede ser opcional
+        return null;
     }
-
-    // Validar extensión
     if (extensionesPermitidas.length > 0) {
         const extension = archivo.name.split('.').pop().toLowerCase();
         if (!extensionesPermitidas.includes(extension)) {
             return `Solo se permiten archivos ${extensionesPermitidas.join(', ')}`;
         }
     }
-
-    // Validar tamaño
     const tamanoMB = archivo.size / (1024 * 1024);
     if (tamanoMB > tamanoMaxMB) {
         return `El archivo no debe exceder ${tamanoMaxMB}MB`;
@@ -201,10 +139,6 @@ function validarArchivo(archivo, extensionesPermitidas = [], tamanoMaxMB = 5) {
 
     return null;
 }
-
-/**
- * Muestra un error en un campo
- */
 function mostrarError(idCampo, mensaje) {
     const campo = document.getElementById(idCampo);
     const errorSpan = document.getElementById(`error${idCampo.charAt(0).toUpperCase() + idCampo.slice(1)}`);
@@ -218,10 +152,6 @@ function mostrarError(idCampo, mensaje) {
         errorSpan.style.display = 'block';
     }
 }
-
-/**
- * Limpia un error de un campo
- */
 function limpiarError(idCampo) {
     const campo = document.getElementById(idCampo);
     const errorSpan = document.getElementById(`error${idCampo.charAt(0).toUpperCase() + idCampo.slice(1)}`);
@@ -235,10 +165,6 @@ function limpiarError(idCampo) {
         errorSpan.style.display = 'none';
     }
 }
-
-/**
- * Limpia todos los errores de un formulario
- */
 function limpiarErroresFormulario(formularioId) {
     const formulario = document.getElementById(formularioId);
     if (!formulario) return;
@@ -254,10 +180,6 @@ function limpiarErroresFormulario(formularioId) {
         error.style.display = 'none';
     });
 }
-
-/**
- * Agrega validación en tiempo real a un campo
- */
 function agregarValidacionTiempoReal(idCampo, funcionValidacion) {
     const campo = document.getElementById(idCampo);
     if (!campo) return;
@@ -275,19 +197,11 @@ function agregarValidacionTiempoReal(idCampo, funcionValidacion) {
         limpiarError(idCampo);
     });
 }
-
-/**
- * Sanitiza HTML para prevenir XSS
- */
 function sanitizarHTML(texto) {
     const div = document.createElement('div');
     div.textContent = texto;
     return div.innerHTML;
 }
-
-/**
- * Valida un formulario completo
- */
 function validarFormulario(formularioId, validaciones) {
     limpiarErroresFormulario(formularioId);
 
@@ -306,8 +220,6 @@ function validarFormulario(formularioId, validaciones) {
             }
         }
     }
-
-    // Hacer focus en el primer campo con error
     if (primerError) {
         document.getElementById(primerError)?.focus();
     }

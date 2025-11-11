@@ -1,15 +1,8 @@
 <?php
-/**
- * Lógica de negocio para gestión de imágenes de habitaciones
- */
-
 require_once __DIR__ . '/../db.php';
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/../../config.inc.php';
 
-/**
- * Sube una o más imágenes para una habitación
- */
 function subirImagenes() {
     if (!isset($_POST['id_habitacion']) || empty($_POST['id_habitacion'])) {
         respuestaError('ID de habitación es requerido');
@@ -29,7 +22,6 @@ function subirImagenes() {
         return;
     }
 
-    // Verificar que la habitación existe
     $sqlVerificar = "SELECT id_habitacion FROM habitaciones WHERE id_habitacion = ?";
     $resultado = ejecutarConsulta($conn, $sqlVerificar, "i", [$idHabitacion]);
 
@@ -39,10 +31,8 @@ function subirImagenes() {
         return;
     }
 
-    // Directorio de destino
     $directorioDestino = __DIR__ . '/../../uploads/habitaciones/';
 
-    // Crear directorio si no existe
     if (!file_exists($directorioDestino)) {
         mkdir($directorioDestino, 0777, true);
     }
@@ -50,12 +40,10 @@ function subirImagenes() {
     $archivosSubidos = [];
     $errores = [];
 
-    // Verificar si ya hay imágenes principales
     $sqlVerificarPrincipal = "SELECT COUNT(*) as total FROM imagenes_habitacion WHERE id_habitacion = ? AND es_principal = 1";
     $resultadoPrincipal = ejecutarConsulta($conn, $sqlVerificarPrincipal, "i", [$idHabitacion]);
     $hayPrincipal = $resultadoPrincipal[0]['total'] > 0;
 
-    // Procesar cada archivo
     $totalArchivos = count($_FILES['imagenes']['name']);
 
     for ($i = 0; $i < $totalArchivos; $i++) {
@@ -64,7 +52,6 @@ function subirImagenes() {
             $tmpName = $_FILES['imagenes']['tmp_name'][$i];
             $tamano = $_FILES['imagenes']['size'][$i];
 
-            // Validar tipo de archivo
             $extensionArchivo = strtolower(pathinfo($nombreArchivo, PATHINFO_EXTENSION));
             $extensionesPermitidas = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
@@ -73,22 +60,17 @@ function subirImagenes() {
                 continue;
             }
 
-            // Validar tamaño (máximo 5MB)
             if ($tamano > 5242880) {
                 $errores[] = "El archivo $nombreArchivo excede el tamaño máximo permitido (5MB)";
                 continue;
             }
 
-            // Generar nombre único
             $nombreNuevo = 'hab_' . $idHabitacion . '_' . uniqid() . '.' . $extensionArchivo;
             $rutaCompleta = $directorioDestino . $nombreNuevo;
 
-            // Mover archivo
             if (move_uploaded_file($tmpName, $rutaCompleta)) {
-                // Guardar en base de datos
                 $rutaRelativa = 'uploads/habitaciones/' . $nombreNuevo;
 
-                // La primera imagen será la principal si no hay ninguna
                 $esPrincipal = (!$hayPrincipal && $i === 0) ? 1 : 0;
 
                 $sqlInsertar = "INSERT INTO imagenes_habitacion (id_habitacion, nombre_archivo, ruta_archivo, es_principal, orden_visualizacion)
@@ -115,7 +97,7 @@ function subirImagenes() {
                     }
                 } else {
                     $errores[] = "Error al guardar $nombreArchivo en la base de datos";
-                    unlink($rutaCompleta); // Eliminar archivo si no se guardó en BD
+                    unlink($rutaCompleta);
                 }
             } else {
                 $errores[] = "Error al subir $nombreArchivo";
@@ -138,9 +120,6 @@ function subirImagenes() {
     }
 }
 
-/**
- * Elimina una imagen
- */
 function eliminarImagen($id) {
     if ($id <= 0) {
         respuestaError('ID de imagen no válido');
@@ -153,7 +132,6 @@ function eliminarImagen($id) {
         return;
     }
 
-    // Obtener información de la imagen
     $sqlObtener = "SELECT id_imagen, id_habitacion, ruta_archivo, es_principal FROM imagenes_habitacion WHERE id_imagen = ?";
     $resultado = ejecutarConsulta($conn, $sqlObtener, "i", [$id]);
 
@@ -165,17 +143,14 @@ function eliminarImagen($id) {
 
     $imagen = $resultado[0];
 
-    // Eliminar archivo físico
     $rutaArchivo = __DIR__ . '/../../' . $imagen['ruta_archivo'];
     if (file_exists($rutaArchivo)) {
         unlink($rutaArchivo);
     }
 
-    // Eliminar de base de datos
     $sqlEliminar = "DELETE FROM imagenes_habitacion WHERE id_imagen = ?";
     $resultadoEliminar = ejecutarModificacion($conn, $sqlEliminar, "i", [$id]);
 
-    // Si era la imagen principal, establecer otra como principal
     if ($imagen['es_principal'] == 1) {
         $sqlNuevaPrincipal = "UPDATE imagenes_habitacion
                               SET es_principal = 1
@@ -194,9 +169,6 @@ function eliminarImagen($id) {
     }
 }
 
-/**
- * Establece una imagen como principal
- */
 function establecerImagenPrincipal($datos) {
     if (empty($datos['id_imagen']) || empty($datos['id_habitacion'])) {
         respuestaError('ID de imagen e ID de habitación son requeridos');
@@ -209,11 +181,9 @@ function establecerImagenPrincipal($datos) {
         return;
     }
 
-    // Quitar el flag de principal a todas las imágenes de la habitación
     $sqlQuitar = "UPDATE imagenes_habitacion SET es_principal = 0 WHERE id_habitacion = ?";
     ejecutarModificacion($conn, $sqlQuitar, "i", [$datos['id_habitacion']]);
 
-    // Establecer la nueva imagen principal
     $sqlEstablecer = "UPDATE imagenes_habitacion SET es_principal = 1 WHERE id_imagen = ?";
     $resultado = ejecutarModificacion($conn, $sqlEstablecer, "i", [$datos['id_imagen']]);
 

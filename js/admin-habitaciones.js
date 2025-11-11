@@ -1,8 +1,3 @@
-/**
- * admin-habitaciones.js
- * Panel de administración de habitaciones
- */
-
 let categorias = [];
 let habitacionEditando = null;
 let accionConfirmacion = null;
@@ -156,7 +151,6 @@ async function handleGuardarHabitacion(e) {
     const accion = document.getElementById('accion').value;
     const formData = new FormData(e.target);
 
-    // Construir objeto de datos
     const datos = {
         numero_habitacion: document.getElementById("numero_habitacion").value,
         id_categoria: parseInt(formData.get('id_categoria')),
@@ -168,17 +162,14 @@ async function handleGuardarHabitacion(e) {
         caracteristicas: formData.get('caracteristicas')
     };
 
-    // Si estamos editando, agregar el ID y el estado
     const idHabitacion = formData.get('id_habitacion');
     if (accion === 'actualizar' && idHabitacion) {
         datos.id_habitacion = parseInt(idHabitacion);
         datos.activo = parseInt(formData.get('activo'));
     } else {
-        // Las habitaciones nuevas siempre se crean activas
         datos.activo = 1;
     }
 
-    // Validar
     if (!validarFormularioHabitacion(datos)) return;
 
     try {
@@ -191,7 +182,6 @@ async function handleGuardarHabitacion(e) {
         if (response && response.success) {
             const idHabitacion = datos.id_habitacion || response.data.id_habitacion;
 
-            // Subir imágenes si hay
             const archivosInput = document.getElementById('imagenes');
             if (archivosInput.files.length > 0) {
                 await subirImagenes(idHabitacion, archivosInput.files);
@@ -323,9 +313,6 @@ function cerrarModalConfirmar() {
     document.getElementById('modalConfirmar').classList.remove('active');
 }
 
-/**
- * Cambia el estado de una habitación (activo/inactivo) rápidamente
- */
 async function toggleEstadoHabitacion(idHabitacion, estadoActual) {
     const nuevoEstado = estadoActual ? 0 : 1;
     const mensaje = nuevoEstado ? 'activar' : 'desactivar';
@@ -335,7 +322,6 @@ async function toggleEstadoHabitacion(idHabitacion, estadoActual) {
     }
 
     try {
-        // Primero obtener los datos actuales de la habitación
         const dataActual = await fetchAutenticado(`${API_BASE}habitaciones.php?accion=obtener&id=${idHabitacion}`);
 
         if (!dataActual || !dataActual.success) {
@@ -345,7 +331,6 @@ async function toggleEstadoHabitacion(idHabitacion, estadoActual) {
 
         const habitacion = dataActual.data.habitacion;
 
-        // Actualizar solo el estado
         const datosActualizar = {
             id_habitacion: idHabitacion,
             numero_habitacion: habitacion.numero_habitacion,

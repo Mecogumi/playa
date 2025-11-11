@@ -47,7 +47,6 @@
     <div class="container">
         <div class="alert hidden" id="alertMessage"></div>
 
-        <!-- Filtros de estado -->
         <div class="filters-section">
             <div class="status-filters">
                 <button class="filter-btn active" data-estado="todas">Todas</button>
@@ -58,7 +57,6 @@
             </div>
         </div>
 
-        <!-- Listado de reservaciones -->
         <div id="reservacionesContainer">
             <div class="loading" id="loading">Cargando reservaciones...</div>
             <div class="empty-message hidden" id="emptyMessage">
@@ -66,22 +64,18 @@
                 <a href="habitaciones.html" class="btn btn-primary">Hacer una Reservación</a>
             </div>
             <div id="reservacionesList">
-                <!-- Las reservaciones se cargarán dinámicamente -->
             </div>
         </div>
     </div>
 
-    <!-- Modal de detalles de reservación -->
     <div class="modal" id="modalDetalles">
         <div class="modal-content modal-large">
             <span class="close" id="closeModal">&times;</span>
             <div id="modalBody">
-                <!-- El contenido se cargará dinámicamente -->
             </div>
         </div>
     </div>
 
-    <!-- Modal de confirmación -->
     <div class="modal" id="modalConfirmar">
         <div class="modal-content modal-small">
             <h3>Confirmar Cancelación</h3>

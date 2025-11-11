@@ -1,9 +1,4 @@
 <?php
-/**
- * API de Imágenes
- * Maneja el enrutamiento de las peticiones de imágenes de habitaciones
- */
-
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, DELETE, OPTIONS');
@@ -15,13 +10,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 session_start();
 
-// Importar la lógica de negocio
 require_once __DIR__ . '/logica/imagenes_logic.php';
 
 $metodo = $_SERVER['REQUEST_METHOD'];
 $accion = isset($_GET['accion']) ? $_GET['accion'] : '';
 
-// Verificar que el usuario sea administrador
 if (!isset($_SESSION['sesion_iniciada']) || $_SESSION['sesion_iniciada'] !== true) {
     respuestaError('No hay sesión activa', 401);
 }
@@ -30,7 +23,6 @@ if ($_SESSION['usuario_tipo'] !== 'admin') {
     respuestaError('No tienes permisos para realizar esta acción', 403);
 }
 
-// Enrutador de acciones
 switch ($accion) {
     case 'subir':
         if ($metodo === 'POST') {

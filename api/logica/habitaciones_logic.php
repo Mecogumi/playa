@@ -1,5 +1,4 @@
 <?php
-
 require_once __DIR__ . '/../db.php';
 require_once __DIR__ . '/helpers.php';
 
@@ -197,7 +196,6 @@ function eliminarHabitacion($id) {
     }
 }
 
-
 function listarPorCategoria($idCategoria) {
     $conn = obtenerConexion();
     if (!$conn) {
@@ -232,7 +230,6 @@ function listarPorCategoria($idCategoria) {
 
     respuestaExito(['habitaciones' => $habitaciones]);
 }
-
 
 function listarCategorias() {
     $conn = obtenerConexion();

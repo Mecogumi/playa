@@ -1,8 +1,3 @@
-/**
- * habitaciones.js
- * Funcionalidad para habitaciones.html (con búsqueda)
- */
-
 let habitacionesData = [];
 let categoriasData = [];
 
@@ -170,24 +165,32 @@ function mostrarResultadosBusqueda(termino, total) {
     const container = document.getElementById('habitacionesPorCategoria');
     if (!container) return;
 
-    container.innerHTML = `
-        <div class="search-results-header">
-            <h2>Resultados de búsqueda para "${sanitizarHTML(termino)}"</h2>
-            <p>Se encontraron ${total} habitación(es)</p>
-        </div>
-    `;
+    container.innerHTML = '';
+
+    const section = document.createElement('div');
+    section.className = 'category-section';
+
+    const header = document.createElement('div');
+    header.className = 'category-header';
+    header.innerHTML = `<h2>Resultados de búsqueda para "${sanitizarHTML(termino)}" (${total})</h2>`;
+
+    section.appendChild(header);
 
     if (total === 0) {
-        container.innerHTML += '<div class="empty-message"><p>No se encontraron resultados</p></div>';
-        return;
+        const emptyMessage = document.createElement('div');
+        emptyMessage.className = 'empty-message';
+        emptyMessage.innerHTML = '<p>No se encontraron resultados</p>';
+        section.appendChild(emptyMessage);
+    } else {
+        const grid = document.createElement('div');
+        grid.className = 'rooms-grid';
+        habitacionesData.forEach(hab => {
+            grid.appendChild(crearTarjetaHabitacion(hab));
+        });
+        section.appendChild(grid);
     }
 
-    const grid = document.createElement('div');
-    grid.className = 'rooms-grid';
-    habitacionesData.forEach(hab => {
-        grid.appendChild(crearTarjetaHabitacion(hab));
-    });
-    container.appendChild(grid);
+    container.appendChild(section);
 }
 
 function crearTarjetaHabitacion(habitacion) {

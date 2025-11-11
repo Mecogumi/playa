@@ -1,14 +1,7 @@
 <?php
-/**
- * Lógica de negocio para gestión de reservaciones
- */
-
 require_once __DIR__ . '/../db.php';
 require_once __DIR__ . '/helpers.php';
 
-/**
- * Verifica si hay un usuario autenticado
- */
 function verificarUsuario() {
     if (!isset($_SESSION['sesion_iniciada']) || $_SESSION['sesion_iniciada'] !== true) {
         respuestaError('Debes iniciar sesión para realizar reservaciones', 401);
@@ -23,23 +16,17 @@ function verificarUsuario() {
     return true;
 }
 
-/**
- * Crea una nueva reservación
- */
 function crearReservacion($datos) {
-    // Validar datos requeridos
     if (empty($datos['fecha_entrada']) || empty($datos['fecha_salida'])) {
         respuestaError('Faltan datos requeridos para la reservación');
         return;
     }
 
-    // Leer habitaciones desde la cookie HTTP
     if (!isset($_COOKIE['carrito_habitaciones']) || empty($_COOKIE['carrito_habitaciones'])) {
         respuestaError('No hay habitaciones en el carrito (cookie no encontrada)');
         return;
     }
 
-    // Decodificar el JSON de la cookie
     $carritoCompleto = json_decode($_COOKIE['carrito_habitaciones'], true);
 
     if (!is_array($carritoCompleto) || count($carritoCompleto) === 0) {
@@ -47,7 +34,6 @@ function crearReservacion($datos) {
         return;
     }
 
-    // Extraer solo los campos necesarios (id_habitacion y cantidad)
     $habitaciones = array_map(function($item) {
         return [
             'id_habitacion' => isset($item['id_habitacion']) ? intval($item['id_habitacion']) : 0,
@@ -55,7 +41,6 @@ function crearReservacion($datos) {
         ];
     }, $carritoCompleto);
 
-    // Validar que todas las habitaciones tengan datos válidos
     foreach ($habitaciones as $hab) {
         if ($hab['id_habitacion'] <= 0 || $hab['cantidad'] <= 0) {
             respuestaError('Datos de habitaciones inválidos en el carrito');
@@ -69,7 +54,6 @@ function crearReservacion($datos) {
         return;
     }
 
-    // Iniciar transacción
     $conn->begin_transaction();
 
     try {
@@ -77,7 +61,6 @@ function crearReservacion($datos) {
         $fechaEntrada = $datos['fecha_entrada'];
         $fechaSalida = $datos['fecha_salida'];
 
-        // Calcular número de noches
         $entrada = new DateTime($fechaEntrada);
         $salida = new DateTime($fechaSalida);
         $numeroNoches = $entrada->diff($salida)->days;
@@ -89,12 +72,10 @@ function crearReservacion($datos) {
         $subtotal = 0;
         $detalles = [];
 
-        // Procesar cada habitación del carrito (desde la cookie HTTP)
         foreach ($habitaciones as $habitacion) {
             $idHabitacion = $habitacion['id_habitacion'];
             $cantidad = $habitacion['cantidad'];
 
-            // Verificar disponibilidad
             $sqlVerificar = "SELECT id_habitacion, cantidad_disponible, precio_noche, nombre
                             FROM habitaciones
                             WHERE id_habitacion = ? AND activo = 1";
@@ -110,12 +91,10 @@ function crearReservacion($datos) {
                 throw new Exception("No hay suficientes habitaciones disponibles de tipo '{$hab['nombre']}'. Disponibles: {$hab['cantidad_disponible']}, Solicitadas: $cantidad");
             }
 
-            // Calcular subtotal de este tipo de habitación
             $precioUnitario = $hab['precio_noche'] * $numeroNoches;
             $subtotalHabitacion = $precioUnitario * $cantidad;
             $subtotal += $subtotalHabitacion;
 
-            // Guardar detalles para insertar después
             $detalles[] = [
                 'id_habitacion' => $idHabitacion,
                 'cantidad' => $cantidad,
@@ -123,7 +102,6 @@ function crearReservacion($datos) {
                 'subtotal' => $subtotalHabitacion
             ];
 
-            // Descontar habitaciones disponibles
             $sqlDescontar = "UPDATE habitaciones
                             SET cantidad_disponible = cantidad_disponible - ?
                             WHERE id_habitacion = ?";
@@ -134,11 +112,9 @@ function crearReservacion($datos) {
             }
         }
 
-        // Calcular impuestos (16%)
         $impuestos = $subtotal * 0.16;
         $total = $subtotal + $impuestos;
 
-        // Insertar reservación
         $sqlReservacion = "INSERT INTO reservaciones (id_usuario, fecha_entrada, fecha_salida, numero_noches, subtotal, impuestos, total, estado_reservacion, notas)
                           VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmada', ?)";
 
@@ -161,7 +137,6 @@ function crearReservacion($datos) {
 
         $idReservacion = $resultadoReservacion['id'];
 
-        // Insertar detalles de la reservación
         foreach ($detalles as $detalle) {
             $sqlDetalle = "INSERT INTO detalles_reservacion (id_reservacion, id_habitacion, cantidad_habitaciones, precio_unitario, subtotal)
                           VALUES (?, ?, ?, ?, ?)";
@@ -179,7 +154,6 @@ function crearReservacion($datos) {
             }
         }
 
-        // Confirmar transacción
         $conn->commit();
         cerrarConexion($conn);
 
@@ -193,16 +167,12 @@ function crearReservacion($datos) {
         ]);
 
     } catch (Exception $e) {
-        // Revertir transacción en caso de error
         $conn->rollback();
         cerrarConexion($conn);
         respuestaError($e->getMessage());
     }
 }
 
-/**
- * Lista todas las reservaciones (solo admin)
- */
 function listarReservaciones() {
     if ($_SESSION['usuario_tipo'] !== 'admin') {
         respuestaError('No tienes permisos para ver todas las reservaciones', 403);
@@ -218,7 +188,6 @@ function listarReservaciones() {
     $sql = "SELECT * FROM vista_reservaciones_completa ORDER BY fecha_reservacion DESC";
     $reservaciones = ejecutarConsulta($conn, $sql);
 
-    // Obtener detalles de cada reservación
     foreach ($reservaciones as &$reservacion) {
         $sqlDetalles = "SELECT dr.*, h.nombre, h.numero_habitacion
                        FROM detalles_reservacion dr
@@ -232,9 +201,6 @@ function listarReservaciones() {
     respuestaExito(['reservaciones' => $reservaciones]);
 }
 
-/**
- * Lista las reservaciones del usuario actual
- */
 function listarMisReservaciones() {
     $conn = obtenerConexion();
     if (!$conn) {
@@ -247,7 +213,6 @@ function listarMisReservaciones() {
     $sql = "SELECT * FROM vista_reservaciones_completa WHERE id_usuario = ? ORDER BY fecha_reservacion DESC";
     $reservaciones = ejecutarConsulta($conn, $sql, "i", [$idUsuario]);
 
-    // Obtener detalles de cada reservación
     foreach ($reservaciones as &$reservacion) {
         $sqlDetalles = "SELECT dr.*, h.nombre, h.numero_habitacion
                        FROM detalles_reservacion dr
@@ -261,9 +226,6 @@ function listarMisReservaciones() {
     respuestaExito(['reservaciones' => $reservaciones]);
 }
 
-/**
- * Obtiene una reservación específica
- */
 function obtenerReservacion($id) {
     if ($id <= 0) {
         respuestaError('ID de reservación no válido');
@@ -278,7 +240,6 @@ function obtenerReservacion($id) {
 
     $sql = "SELECT * FROM vista_reservaciones_completa WHERE id_reservacion = ?";
 
-    // Si no es admin, solo puede ver sus propias reservaciones
     if ($_SESSION['usuario_tipo'] !== 'admin') {
         $sql .= " AND id_usuario = " . $_SESSION['usuario_id'];
     }
@@ -293,7 +254,6 @@ function obtenerReservacion($id) {
 
     $reservacion = $resultado[0];
 
-    // Obtener detalles
     $sqlDetalles = "SELECT dr.*, h.nombre, h.numero_habitacion
                    FROM detalles_reservacion dr
                    INNER JOIN habitaciones h ON dr.id_habitacion = h.id_habitacion
@@ -305,9 +265,6 @@ function obtenerReservacion($id) {
     respuestaExito(['reservacion' => $reservacion]);
 }
 
-/**
- * Cancela una reservación
- */
 function cancelarReservacion($id) {
     if ($id <= 0) {
         respuestaError('ID de reservación no válido');
@@ -320,7 +277,6 @@ function cancelarReservacion($id) {
         return;
     }
 
-    // Verificar que la reservación existe y pertenece al usuario (o es admin)
     $sqlVerificar = "SELECT id_reservacion, id_usuario, estado_reservacion
                     FROM reservaciones
                     WHERE id_reservacion = ?";
@@ -345,11 +301,9 @@ function cancelarReservacion($id) {
         return;
     }
 
-    // Iniciar transacción
     $conn->begin_transaction();
 
     try {
-        // Devolver las habitaciones al inventario
         $sqlDetalles = "SELECT id_habitacion, cantidad_habitaciones
                        FROM detalles_reservacion
                        WHERE id_reservacion = ?";
@@ -365,7 +319,6 @@ function cancelarReservacion($id) {
             ]);
         }
 
-        // Actualizar estado de reservación
         $sqlCancelar = "UPDATE reservaciones SET estado_reservacion = 'cancelada' WHERE id_reservacion = ?";
         $resultadoCancelar = ejecutarModificacion($conn, $sqlCancelar, "i", [$id]);
 
@@ -385,9 +338,6 @@ function cancelarReservacion($id) {
     }
 }
 
-/**
- * Verifica la disponibilidad de habitaciones para unas fechas
- */
 function verificarDisponibilidad($datos) {
     if (empty($datos['fecha_entrada']) || empty($datos['fecha_salida'])) {
         respuestaError('Fechas de entrada y salida son requeridas');
@@ -400,8 +350,6 @@ function verificarDisponibilidad($datos) {
         return;
     }
 
-    // Por ahora, simplemente retornamos la disponibilidad actual
-    // En una implementación más avanzada, se verificaría contra reservaciones existentes
     $sql = "SELECT id_habitacion, numero_habitacion, nombre, cantidad_disponible, precio_noche
             FROM habitaciones
             WHERE activo = 1 AND cantidad_disponible > 0";

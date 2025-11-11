@@ -1,18 +1,9 @@
-/**
- * main.js
- * Funcionalidad para index.html
- */
-
 document.addEventListener('DOMContentLoaded', async () => {
     await cargarCategorias();
     await cargarHabitacionesDestacadas();
     configurarBusqueda();
     configurarModal();
 });
-
-/**
- * Carga las categorías
- */
 async function cargarCategorias() {
     try {
         const response = await fetch(`${API_BASE}habitaciones.php?accion=categorias`);
@@ -25,10 +16,6 @@ async function cargarCategorias() {
         console.error('Error al cargar categorías:', error);
     }
 }
-
-/**
- * Muestra las categorías en la UI
- */
 function mostrarCategorias(categorias) {
     const grid = document.getElementById('categoriasGrid');
     if (!grid) return;
@@ -50,10 +37,6 @@ function mostrarCategorias(categorias) {
         grid.appendChild(card);
     });
 }
-
-/**
- * Carga habitaciones destacadas (primeras 6)
- */
 async function cargarHabitacionesDestacadas() {
     try {
         const response = await fetch(`${API_BASE}habitaciones.php?accion=listar`);
@@ -67,10 +50,6 @@ async function cargarHabitacionesDestacadas() {
         console.error('Error al cargar habitaciones:', error);
     }
 }
-
-/**
- * Muestra las habitaciones en la UI
- */
 function mostrarHabitaciones(habitaciones) {
     const grid = document.getElementById('habitacionesGrid');
     if (!grid) return;
@@ -87,10 +66,6 @@ function mostrarHabitaciones(habitaciones) {
         grid.appendChild(card);
     });
 }
-
-/**
- * Crea una tarjeta de habitación
- */
 function crearTarjetaHabitacion(habitacion) {
     const card = document.createElement('div');
     card.className = 'room-card';
@@ -129,10 +104,6 @@ function crearTarjetaHabitacion(habitacion) {
 
     return card;
 }
-
-/**
- * Muestra los detalles de una habitación en un modal
- */
 async function mostrarDetalles(idHabitacion) {
     try {
         const response = await fetch(`${API_BASE}habitaciones.php?accion=obtener&id=${idHabitacion}`);
@@ -147,10 +118,6 @@ async function mostrarDetalles(idHabitacion) {
         alert('Error al cargar los detalles de la habitación');
     }
 }
-
-/**
- * Muestra el modal con los detalles de la habitación
- */
 function mostrarModalDetalles(habitacion) {
     const modal = document.getElementById('modalDetalles');
     const modalBody = document.getElementById('modalBody');
@@ -208,10 +175,6 @@ function mostrarModalDetalles(habitacion) {
 
     modal.classList.add('active');
 }
-
-/**
- * Agrega una habitación al carrito
- */
 async function agregarHabitacionAlCarrito(idHabitacion) {
     try {
         const response = await fetch(`${API_BASE}habitaciones.php?accion=obtener&id=${idHabitacion}`);
@@ -228,10 +191,6 @@ async function agregarHabitacionAlCarrito(idHabitacion) {
         alert('Error al agregar la habitación al carrito');
     }
 }
-
-/**
- * Configura la búsqueda
- */
 function configurarBusqueda() {
     const form = document.getElementById('formBusqueda');
     if (!form) return;
@@ -244,10 +203,6 @@ function configurarBusqueda() {
         }
     });
 }
-
-/**
- * Configura el modal
- */
 function configurarModal() {
     const modal = document.getElementById('modalDetalles');
     const closeBtn = document.getElementById('closeModal');
@@ -264,10 +219,6 @@ function configurarModal() {
         };
     }
 }
-
-/**
- * Cierra el modal
- */
 function cerrarModal() {
     const modal = document.getElementById('modalDetalles');
     if (modal) {

@@ -1,8 +1,3 @@
-/**
- * carrito-page.js
- * Funcionalidad para carrito.html
- */
-
 let numeroNoches = 0;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -145,7 +140,6 @@ function actualizarCostos() {
 }
 
 function mostrarConfirmacionPago() {
-    // Validar fechas
     const fechaEntrada = document.getElementById('fecha_entrada').value;
     const fechaSalida = document.getElementById('fecha_salida').value;
 
@@ -165,7 +159,6 @@ function mostrarConfirmacionPago() {
         return;
     }
 
-    // Mostrar modal de confirmación
     const noches = numeroNoches;
     const total = calcularTotal(noches);
 
@@ -184,7 +177,6 @@ async function procesarReservacion() {
     const notas = document.getElementById('notas').value;
     const carrito = obtenerCarrito();
 
-    // Verificar que hay habitaciones en el carrito
     if (carrito.length === 0) {
         alert('El carrito está vacío');
         btnConfirmar.disabled = false;
@@ -192,8 +184,6 @@ async function procesarReservacion() {
         return;
     }
 
-    // Las habitaciones se envían mediante cookie HTTP automáticamente
-    // No es necesario incluirlas en el body
     const datos = {
         fecha_entrada: fechaEntrada,
         fecha_salida: fechaSalida,

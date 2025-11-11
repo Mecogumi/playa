@@ -1,10 +1,3 @@
-/**
- * registro.js
- * Funcionalidad para registro.html
- */
-
-
-
 document.addEventListener('DOMContentLoaded', () => {
     if (estaAutenticado()) {
         window.location.href = 'index.html';
@@ -13,15 +6,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const form = document.getElementById('formRegistro');
     form.addEventListener('submit', handleRegistro);
-
-    // Agregar validaciones en tiempo real
     agregarValidacionTiempoReal('usuario', (valor) => validarLongitudMinima(valor, 4, 'El usuario'));
     agregarValidacionTiempoReal('nombre_completo', (valor) => validarLongitudMinima(valor, 3, 'El nombre completo'));
     agregarValidacionTiempoReal('email', validarEmail);
     agregarValidacionTiempoReal('telefono', (valor) => validarTelefono(valor, false));
     agregarValidacionTiempoReal('contrasena', (valor) => validarLongitudMinima(valor, 6, 'La contraseña'));
-
-    // Validar confirmación de contraseña cuando cambie
     const confirmarInput = document.getElementById('confirmar_contrasena');
     confirmarInput.addEventListener('blur', () => {
         const contrasena = document.getElementById('contrasena').value;
@@ -40,8 +29,6 @@ async function handleRegistro(e) {
 
     limpiarErroresFormulario('formRegistro');
     ocultarAlerta();
-
-    // Obtener valores
     const datos = {
         usuario: document.getElementById('usuario').value.trim(),
         nombre_completo: document.getElementById('nombre_completo').value.trim(),
@@ -50,8 +37,6 @@ async function handleRegistro(e) {
         contrasena: document.getElementById('contrasena').value,
         confirmar_contrasena: document.getElementById('confirmar_contrasena').value
     };
-
-    // Validar
     let valido = true;
     const errores = {
         usuario: validarLongitudMinima(datos.usuario, 4, 'El usuario'),

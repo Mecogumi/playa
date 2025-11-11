@@ -1,8 +1,3 @@
-/**
- * admin-usuarios.js
- * Panel de administración de usuarios
- */
-
 let usuarioEditando = null;
 let accionConfirmacion = null;
 let filtroActual = 'todos';
@@ -23,7 +18,6 @@ function configurarEventos() {
     document.getElementById('btnConfirmarAccion').onclick = () => ejecutarAccionConfirmada();
     document.getElementById('btnCancelarAccion').onclick = cerrarModalConfirmar;
 
-    // Filtros
     const filterBtns = document.querySelectorAll('.status-filters .filter-btn');
     filterBtns.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -131,7 +125,6 @@ function abrirModalNuevoUsuario() {
     document.getElementById('seccionEstado').style.display = 'none';
     document.getElementById('nombre_usuario').disabled = false;
 
-    // Hacer contraseña obligatoria
     document.getElementById('contrasena').required = true;
     document.getElementById('confirmar_contrasena').required = true;
     document.getElementById('labelContrasena').innerHTML = 'Contraseña *';
@@ -167,7 +160,6 @@ function llenarFormularioEdicion(usuario) {
     document.getElementById('tipo_usuario').value = usuario.tipo_usuario;
     document.getElementById('activo').value = usuario.activo ? '1' : '0';
 
-    // Contraseña opcional al editar
     document.getElementById('contrasena').value = '';
     document.getElementById('confirmar_contrasena').value = '';
     document.getElementById('contrasena').required = false;
@@ -194,19 +186,16 @@ async function handleGuardarUsuario(e) {
     };
     console.log(datos)
 
-    // Contraseña
     const contrasena = formData.get('contrasena');
     const confirmarContrasena = formData.get('confirmar_contrasena');
 
     if (accion === 'crear') {
-        // Al crear, la contraseña es obligatoria
         if (!contrasena || contrasena.length < 6) {
             mostrarError('contrasena', 'La contraseña debe tener al menos 6 caracteres');
             return;
         }
         datos.contrasena = contrasena;
     } else {
-        // Al editar, la contraseña es opcional
         if (contrasena) {
             if (contrasena.length < 6) {
                 mostrarError('contrasena', 'La contraseña debe tener al menos 6 caracteres');
@@ -218,13 +207,11 @@ async function handleGuardarUsuario(e) {
         datos.activo = parseInt(formData.get('activo'));
     }
 
-    // Validar confirmación de contraseña
     if (contrasena && contrasena !== confirmarContrasena) {
         mostrarError('confirmar_contrasena', 'Las contraseñas no coinciden');
         return;
     }
 
-    // Validar
     if (!validarFormularioUsuario(datos)) return;
 
     try {
