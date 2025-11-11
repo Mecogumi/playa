@@ -11,7 +11,9 @@
     <nav class="navbar">
         <div class="container">
             <div class="nav-brand">
-                <h1><a href="index.html">🏖️ Hotel Playa</a></h1>
+                <h1><a href="index.html">
+                    <img class="logo" src="images/Logo-horizontal.svg" alt="Logo">
+                </a></h1>
             </div>
             <ul class="nav-menu" id="navMenu">
                 <li><a href="index.html" class="active">Inicio</a></li>
@@ -30,6 +32,7 @@
                     <ul class="dropdown-menu">
                         <li><a href="admin-habitaciones.html">Habitaciones</a></li>
                         <li><a href="admin-usuarios.html">Usuarios</a></li>
+                        <li><a href="mis-reservaciones.html">Administrar Reservaciones</a></li>
                     </ul>
                 </li>
                 <li class="huesped-only hidden">
@@ -41,7 +44,7 @@
             <div class="user-info hidden dropdown" id="userInfo">
                 <a href="#" class="dropdown-toggle" id="userName"></a>
                 <ul class="dropdown-menu">
-                    <li class="auth-only hidden"><a href="mis-reservaciones.html">Mis Reservaciones</a></li>
+                    <li class="huesped-only hidden"><a href="mis-reservaciones.html">Mis Reservaciones</a></li>
                     <li class="auth-only hidden"><a href="#" id="btnCerrarSesion">Cerrar Sesión</a></li>
                 </ul>
             </div>
@@ -71,11 +74,8 @@
     <section class="search-section">
         <div class="container">
             <div class="search-box">
-                <h2>Buscar Habitaciones</h2>
                 <form id="formBusqueda" class="search-form">
-                    <div class="form-group">
-                        <input type="text" id="searchTerm" placeholder="Buscar por nombre, categoría o características..." class="form-control">
-                    </div>
+                    <input type="text" id="searchTerm" placeholder="Buscar habitaciones..." class="form-control">
                     <button type="submit" class="btn btn-primary">Buscar</button>
                 </form>
             </div>

@@ -9,9 +9,29 @@ let reservacionACancelar = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     if (!requerirAutenticacion()) return;
+    actualizarTituloPagina();
     await cargarReservaciones();
     configurarEventos();
 });
+
+function actualizarTituloPagina() {
+    if (esAdmin()) {
+        // Actualizar título del header
+        const pageHeader = document.querySelector('.page-header h1');
+        if (pageHeader) {
+            pageHeader.textContent = 'Administrar Reservaciones';
+        }
+
+        // Actualizar título de la página
+        document.title = 'Administrar Reservaciones - Hotel Playa';
+
+        // Actualizar descripción
+        const pageDescription = document.querySelector('.page-header p');
+        if (pageDescription) {
+            pageDescription.textContent = 'Gestiona todas las reservaciones del hotel';
+        }
+    }
+}
 
 function configurarEventos() {
     const filterBtns = document.querySelectorAll('.status-filters .filter-btn');

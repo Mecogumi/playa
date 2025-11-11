@@ -10,7 +10,9 @@
     <nav class="navbar">
         <div class="container">
             <div class="nav-brand">
-                <h1><a href="index.html">🏖️ Hotel Playa</a></h1>
+                <h1><a href="index.html">
+                    <img class="logo" src="images/Logo-horizontal.svg" alt="Logo">
+                </a></h1>
             </div>
             <ul class="nav-menu">
                 <li><a href="index.html">Inicio</a></li>
@@ -29,6 +31,7 @@
                     <ul class="dropdown-menu">
                         <li><a href="admin-habitaciones.html">Habitaciones</a></li>
                         <li><a href="admin-usuarios.html">Usuarios</a></li>
+                        <li><a href="mis-reservaciones.html">Administrar Reservaciones</a></li>
                     </ul>
                 </li>
                 <li class="huesped-only hidden">
@@ -40,7 +43,7 @@
             <div class="user-info hidden dropdown" id="userInfo">
                 <a href="#" class="dropdown-toggle" id="userName"></a>
                 <ul class="dropdown-menu">
-                    <li class="auth-only hidden"><a href="mis-reservaciones.html">Mis Reservaciones</a></li>
+                    <li class="huesped-only hidden"><a href="mis-reservaciones.html">Mis Reservaciones</a></li>
                     <li class="auth-only hidden"><a href="#" id="btnCerrarSesion">Cerrar Sesión</a></li>
                 </ul>
             </div>
@@ -53,7 +56,7 @@
             </div>
         </div>
     </nav>
-
+    
     <div class="auth-container">
         <div class="auth-box">
             <h2>Crear Cuenta</h2>

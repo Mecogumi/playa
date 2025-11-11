@@ -1,14 +1,8 @@
 <?php
-/**
- * Lógica de negocio para gestión de habitaciones
- */
 
 require_once __DIR__ . '/../db.php';
 require_once __DIR__ . '/helpers.php';
 
-/**
- * Verifica si el usuario es administrador
- */
 function verificarAdmin() {
     if (!isset($_SESSION['sesion_iniciada']) || $_SESSION['sesion_iniciada'] !== true) {
         respuestaError('No hay sesión activa', 401);
@@ -23,9 +17,6 @@ function verificarAdmin() {
     return true;
 }
 
-/**
- * Lista todas las habitaciones activas (o todas si es admin)
- */
 function listarHabitaciones() {
     $conn = obtenerConexion();
     if (!$conn) {
@@ -33,8 +24,6 @@ function listarHabitaciones() {
         return;
     }
 
-    // Si el usuario es admin, mostrar todas las habitaciones (activas e inactivas)
-    // Si no es admin o no hay sesión, mostrar solo las activas
     $mostrarTodas = isset($_SESSION['usuario_tipo']) && $_SESSION['usuario_tipo'] === 'admin';
 
     if ($mostrarTodas) {
@@ -45,7 +34,6 @@ function listarHabitaciones() {
 
     $habitaciones = ejecutarConsulta($conn, $sql);
 
-    // Obtener imágenes para cada habitación
     foreach ($habitaciones as &$habitacion) {
         $sqlImagenes = "SELECT id_imagen, nombre_archivo, ruta_archivo, es_principal, orden_visualizacion
                         FROM imagenes_habitacion
@@ -59,9 +47,6 @@ function listarHabitaciones() {
     respuestaExito(['habitaciones' => $habitaciones]);
 }
 
-/**
- * Obtiene una habitación específica
- */
 function obtenerHabitacion($id) {
     if ($id <= 0) {
         respuestaError('ID de habitación no válido');
@@ -85,7 +70,6 @@ function obtenerHabitacion($id) {
 
     $habitacion = $resultado[0];
 
-    // Obtener imágenes
     $sqlImagenes = "SELECT id_imagen, nombre_archivo, ruta_archivo, es_principal, orden_visualizacion
                     FROM imagenes_habitacion
                     WHERE id_habitacion = ?
@@ -97,11 +81,7 @@ function obtenerHabitacion($id) {
     respuestaExito(['habitacion' => $habitacion]);
 }
 
-/**
- * Crea una nueva habitación
- */
 function crearHabitacion($datos) {
-    // Validar datos requeridos
     if (empty($datos['numero_habitacion']) || empty($datos['id_categoria']) ||
         empty($datos['nombre']) || empty($datos['precio_noche']) ||
         empty($datos['capacidad_personas']) || empty($datos['cantidad_disponible'])) {
@@ -115,7 +95,6 @@ function crearHabitacion($datos) {
         return;
     }
 
-    // Verificar si el número de habitación ya existe
     $sqlVerificar = "SELECT id_habitacion FROM habitaciones WHERE numero_habitacion = ?";
     $resultado = ejecutarConsulta($conn, $sqlVerificar, "s", [$datos['numero_habitacion']]);
 
@@ -152,9 +131,6 @@ function crearHabitacion($datos) {
     }
 }
 
-/**
- * Actualiza una habitación existente
- */
 function actualizarHabitacion($datos) {
     if (empty($datos['id_habitacion'])) {
         respuestaError('ID de habitación es requerido');
@@ -196,9 +172,7 @@ function actualizarHabitacion($datos) {
     }
 }
 
-/**
- * Elimina (desactiva) una habitación
- */
+
 function eliminarHabitacion($id) {
     if ($id <= 0) {
         respuestaError('ID de habitación no válido');
@@ -223,17 +197,13 @@ function eliminarHabitacion($id) {
     }
 }
 
-/**
- * Lista habitaciones por categoría
- */
+
 function listarPorCategoria($idCategoria) {
     $conn = obtenerConexion();
     if (!$conn) {
         respuestaError('Error de conexión a la base de datos');
         return;
     }
-
-    // Si el usuario es admin, mostrar todas las habitaciones
     $mostrarTodas = isset($_SESSION['usuario_tipo']) && $_SESSION['usuario_tipo'] === 'admin';
 
     if ($mostrarTodas) {
@@ -250,7 +220,6 @@ function listarPorCategoria($idCategoria) {
         $habitaciones = ejecutarConsulta($conn, $sql);
     }
 
-    // Obtener imágenes para cada habitación
     foreach ($habitaciones as &$habitacion) {
         $sqlImagenes = "SELECT id_imagen, nombre_archivo, ruta_archivo, es_principal
                         FROM imagenes_habitacion
@@ -264,9 +233,7 @@ function listarPorCategoria($idCategoria) {
     respuestaExito(['habitaciones' => $habitaciones]);
 }
 
-/**
- * Lista todas las categorías
- */
+
 function listarCategorias() {
     $conn = obtenerConexion();
     if (!$conn) {
@@ -287,9 +254,6 @@ function listarCategorias() {
     respuestaExito(['categorias' => $categorias]);
 }
 
-/**
- * Busca habitaciones por término
- */
 function buscarHabitaciones($termino) {
     if (empty($termino)) {
         listarHabitaciones();
@@ -304,7 +268,6 @@ function buscarHabitaciones($termino) {
 
     $terminoBusqueda = '%' . $termino . '%';
 
-    // Si el usuario es admin, buscar en todas las habitaciones
     $mostrarTodas = isset($_SESSION['usuario_tipo']) && $_SESSION['usuario_tipo'] === 'admin';
 
     if ($mostrarTodas) {
@@ -334,7 +297,6 @@ function buscarHabitaciones($termino) {
         $terminoBusqueda, $terminoBusqueda
     ]);
 
-    // Obtener imágenes para cada habitación
     foreach ($habitaciones as &$habitacion) {
         $sqlImagenes = "SELECT id_imagen, nombre_archivo, ruta_archivo, es_principal
                         FROM imagenes_habitacion

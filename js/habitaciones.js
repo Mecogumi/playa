@@ -17,8 +17,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         await buscarHabitaciones(terminoBusqueda);
     } else if (categoriaId) {
         await cargarHabitacionesPorCategoria(parseInt(categoriaId));
+        actualizarBotonActivo(categoriaId);
     } else {
         await cargarTodasLasHabitaciones();
+        actualizarBotonActivo('todas');
     }
 
     configurarBusqueda();
@@ -59,7 +61,7 @@ async function cargarTodasLasHabitaciones() {
         const data = await response.json();
         if (data.success) {
             habitacionesData = data.data.habitaciones;
-            mostrarHabitacionesAgrupadasPorCategoria();
+            mostrarTodasLasHabitaciones();
         }
     } catch (error) {
         console.error('Error:', error);
@@ -92,6 +94,36 @@ async function buscarHabitaciones(termino) {
         console.error('Error:', error);
         mostrarAlerta('Error al buscar habitaciones', 'error');
     }
+}
+
+function mostrarTodasLasHabitaciones() {
+    const container = document.getElementById('habitacionesPorCategoria');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (habitacionesData.length === 0) {
+        container.innerHTML = '<div class="empty-message"><p>No se encontraron habitaciones</p></div>';
+        return;
+    }
+
+    const section = document.createElement('div');
+    section.className = 'category-section';
+
+    const header = document.createElement('div');
+    header.className = 'category-header';
+    header.innerHTML = `<h2>Todas las habitaciones (${habitacionesData.length})</h2>`;
+
+    const grid = document.createElement('div');
+    grid.className = 'rooms-grid';
+
+    habitacionesData.forEach(hab => {
+        grid.appendChild(crearTarjetaHabitacion(hab));
+    });
+
+    section.appendChild(header);
+    section.appendChild(grid);
+    container.appendChild(section);
 }
 
 function mostrarHabitacionesAgrupadasPorCategoria() {
@@ -284,6 +316,16 @@ function configurarFiltros() {
 
 function filtrarPorCategoria(idCategoria) {
     window.location.href = `habitaciones.html?categoria=${idCategoria}`;
+}
+
+function actualizarBotonActivo(categoriaId) {
+    const botones = document.querySelectorAll('.filter-btn');
+    botones.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.categoria === String(categoriaId)) {
+            btn.classList.add('active');
+        }
+    });
 }
 
 function configurarModal() {

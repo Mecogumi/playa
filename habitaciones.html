@@ -10,7 +10,9 @@
     <nav class="navbar">
         <div class="container">
             <div class="nav-brand">
-                <h1><a href="index.html">🏖️ Hotel Playa</a></h1>
+                <h1><a href="index.html">
+                    <img class="logo" src="images/Logo-horizontal.svg" alt="Logo">
+                </a></h1>
             </div>
             <ul class="nav-menu" id="navMenu">
                 <li><a href="index.html">Inicio</a></li>
@@ -29,6 +31,7 @@
                     <ul class="dropdown-menu">
                         <li><a href="admin-habitaciones.html">Habitaciones</a></li>
                         <li><a href="admin-usuarios.html">Usuarios</a></li>
+                        <li><a href="mis-reservaciones.html">Administrar Reservaciones</a></li>
                     </ul>
                 </li>
                 <li class="huesped-only hidden">
@@ -40,7 +43,7 @@
             <div class="user-info hidden dropdown" id="userInfo">
                 <a href="#" class="dropdown-toggle" id="userName"></a>
                 <ul class="dropdown-menu">
-                    <li class="auth-only hidden"><a href="mis-reservaciones.html">Mis Reservaciones</a></li>
+                    <li class="huesped-only hidden"><a href="mis-reservaciones.html">Mis Reservaciones</a></li>
                     <li class="auth-only hidden"><a href="#" id="btnCerrarSesion">Cerrar Sesión</a></li>
                 </ul>
             </div>
@@ -55,14 +58,13 @@
     </nav>
 
     <div class="page-header">
-        <div class="container">
+        <div class="container page-container">
             <h1>Nuestras Habitaciones</h1>
             <p>Encuentra el lugar perfecto para tu estadía</p>
         </div>
     </div>
 
     <div class="container">
-        <!-- Filtros y búsqueda -->
         <div class="filters-section">
             <div class="search-box">
                 <form id="formBusqueda" class="search-form">
@@ -73,24 +75,19 @@
 
             <div class="category-filters" id="categoryFilters">
                 <button class="filter-btn active" data-categoria="todas">Todas</button>
-                <!-- Las categorías se cargarán dinámicamente -->
             </div>
         </div>
 
         <div class="alert hidden" id="alertMessage"></div>
 
-        <!-- Listado de habitaciones por categoría -->
         <div id="habitacionesPorCategoria">
-            <!-- Las habitaciones se cargarán dinámicamente agrupadas por categoría -->
         </div>
     </div>
 
-    <!-- Modal para detalles de habitación -->
     <div class="modal" id="modalDetalles">
         <div class="modal-content modal-large">
             <span class="close" id="closeModal">&times;</span>
             <div id="modalBody">
-                <!-- El contenido se cargará dinámicamente -->
             </div>
         </div>
     </div>
