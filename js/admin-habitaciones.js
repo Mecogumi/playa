@@ -205,19 +205,19 @@ function validarFormularioHabitacion(datos) {
         valido = false;
     }
     if (!datos.nombre) {
-        mostrarError('nombre', 'El nombre es requerido');
+        mostrarError('Nombre', 'El nombre es requerido');
         valido = false;
     }
-    if (datos.precio_noche <= 0) {
-        mostrarError('precio_noche', 'El precio debe ser mayor a 0');
+    if (!datos.precio_noche || datos.precio_noche <= 0) {
+        mostrarError('Precio', 'El precio debe ser mayor a 0');
         valido = false;
     }
-    if (datos.capacidad_personas < 1) {
-        mostrarError('capacidad_personas', 'La capacidad debe ser al menos 1');
+    if (!datos.capacidad_personas || datos.capacidad_personas < 1) {
+        mostrarError('Capacidad', 'La capacidad debe ser al menos 1');
         valido = false;
     }
-    if (datos.cantidad_disponible < 0) {
-        mostrarError('cantidad_disponible', 'La cantidad no puede ser negativa');
+    if (datos.cantidad_disponible === undefined || datos.cantidad_disponible === null || datos.cantidad_disponible < 0) {
+        mostrarError('Cantidad', 'La cantidad no puede ser negativa');
         valido = false;
     }
 
