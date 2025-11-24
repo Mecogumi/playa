@@ -191,7 +191,7 @@ function listarReservaciones() {
 
     foreach ($reservaciones as &$reservacion) {
         $idReservacion = intval($reservacion['id_reservacion']);
-        $sqlDetalles = "SELECT dr.*, h.nombre, h.numero_habitacion
+        $sqlDetalles = "SELECT dr.*, h.nombre, h.id_habitacion
                        FROM detalles_reservacion dr
                        INNER JOIN habitaciones h ON dr.id_habitacion = h.id_habitacion
                        WHERE dr.id_reservacion = $idReservacion";
@@ -240,7 +240,7 @@ function listarMisReservaciones() {
 
     foreach ($reservaciones as &$reservacion) {
         $idReservacion = intval($reservacion['id_reservacion']);
-        $sqlDetalles = "SELECT dr.*, h.nombre, h.numero_habitacion
+        $sqlDetalles = "SELECT dr.*, h.nombre, h.id_habitacion
                        FROM detalles_reservacion dr
                        INNER JOIN habitaciones h ON dr.id_habitacion = h.id_habitacion
                        WHERE dr.id_reservacion = $idReservacion";
@@ -291,7 +291,7 @@ function obtenerReservacion($id) {
     }
 
     $idReservacion = intval($reservacion['id_reservacion']);
-    $sqlDetalles = "SELECT dr.*, h.nombre, h.numero_habitacion
+    $sqlDetalles = "SELECT dr.*, h.nombre, h.id_habitacion
                    FROM detalles_reservacion dr
                    INNER JOIN habitaciones h ON dr.id_habitacion = h.id_habitacion
                    WHERE dr.id_reservacion = $idReservacion";
@@ -413,7 +413,7 @@ function verificarDisponibilidad($datos) {
     }
     seleccionarBaseDatos($conn);
 
-    $sql = "SELECT id_habitacion, numero_habitacion, nombre, cantidad_disponible, precio_noche
+    $sql = "SELECT id_habitacion, nombre, cantidad_disponible, precio_noche
             FROM habitaciones
             WHERE activo = 1 AND cantidad_disponible > 0";
 

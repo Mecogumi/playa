@@ -1,13 +1,7 @@
 const COOKIE_NOMBRE = 'carrito_habitaciones';
 const COOKIE_DIAS = 7;
-function obtenerCarrito() {
-    const carritoStr = getCookie(COOKIE_NOMBRE);
-    return carritoStr ? JSON.parse(carritoStr) : [];
-}
-function guardarCarrito(carrito) {
-    setCookie(COOKIE_NOMBRE, JSON.stringify(carrito), COOKIE_DIAS);
-    actualizarBadgeCarrito();
-}
+
+// Funciones para manejo de cookies
 function getCookie(nombre) {
     const name = nombre + "=";
     const decodedCookie = decodeURIComponent(document.cookie);
@@ -24,14 +18,26 @@ function getCookie(nombre) {
     }
     return "";
 }
+
 function setCookie(nombre, valor, dias) {
     const d = new Date();
     d.setTime(d.getTime() + (dias * 24 * 60 * 60 * 1000));
     const expires = "expires=" + d.toUTCString();
     document.cookie = nombre + "=" + valor + ";" + expires + ";path=/";
 }
+
 function deleteCookie(nombre) {
     document.cookie = nombre + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+}
+
+function obtenerCarrito() {
+    const carritoStr = getCookie(COOKIE_NOMBRE);
+    return carritoStr ? JSON.parse(carritoStr) : [];
+}
+
+function guardarCarrito(carrito) {
+    setCookie(COOKIE_NOMBRE, JSON.stringify(carrito), COOKIE_DIAS);
+    actualizarBadgeCarrito();
 }
 function agregarAlCarrito(habitacion, cantidad = 1) {
     const usuario = obtenerUsuarioActual();
