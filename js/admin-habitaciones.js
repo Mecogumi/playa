@@ -61,7 +61,7 @@ function mostrarHabitacionesTabla(habitaciones) {
     habitaciones.forEach(hab => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${sanitizarHTML(hab.numero_habitacion)}</td>
+            <td>${hab.id_habitacion}</td>
             <td>${sanitizarHTML(hab.nombre)}</td>
             <td>${sanitizarHTML(hab.nombre_categoria)}</td>
             <td>${formatearPrecio(hab.precio_noche)}</td>
@@ -110,11 +110,9 @@ async function editarHabitacion(id) {
 }
 
 function llenarFormularioEdicion(hab) {
-    document.getElementById('modalTitle').textContent = 'Editar Habitación';
+    document.getElementById('modalTitle').textContent = 'Editar Habitación #' + hab.id_habitacion;
     document.getElementById('id_habitacion').value = hab.id_habitacion;
     document.getElementById('accion').value = 'actualizar';
-    document.getElementById('numero_habitacion').value = hab.numero_habitacion;
-    document.getElementById('numero_habitacion').disabled = true;
     document.getElementById('id_categoria').value = hab.id_categoria;
     document.getElementById('nombre').value = hab.nombre;
     document.getElementById('descripcion').value = hab.descripcion || '';
@@ -152,7 +150,6 @@ async function handleGuardarHabitacion(e) {
     const formData = new FormData(e.target);
 
     const datos = {
-        numero_habitacion: document.getElementById("numero_habitacion").value,
         id_categoria: parseInt(formData.get('id_categoria')),
         nombre: formData.get('nombre'),
         descripcion: formData.get('descripcion'),
@@ -203,10 +200,6 @@ function validarFormularioHabitacion(datos) {
     limpiarErroresFormulario('formHabitacion');
     let valido = true;
 
-    if (!datos.numero_habitacion) {
-        mostrarError('NumeroHabitacion', 'El número de habitación es requerido');
-        valido = false;
-    }
     if (!datos.id_categoria) {
         mostrarError('Categoria', 'Debes seleccionar una categoría');
         valido = false;
@@ -330,7 +323,6 @@ function ejecutarAccionConfirmada() {
 
 function cerrarModalHabitacion() {
     document.getElementById('modalHabitacion').classList.remove('active');
-    document.getElementById('numero_habitacion').disabled = false;
 }
 
 function cerrarModalConfirmar() {
@@ -357,7 +349,6 @@ async function toggleEstadoHabitacion(idHabitacion, estadoActual) {
 
         const datosActualizar = {
             id_habitacion: idHabitacion,
-            numero_habitacion: habitacion.numero_habitacion,
             id_categoria: habitacion.id_categoria,
             nombre: habitacion.nombre,
             descripcion: habitacion.descripcion,

@@ -66,7 +66,6 @@ CREATE TABLE `detalles_reservacion` (
 
 CREATE TABLE `habitaciones` (
   `id_habitacion` int(11) NOT NULL,
-  `numero_habitacion` varchar(20) NOT NULL,
   `id_categoria` int(11) NOT NULL,
   `nombre` varchar(100) NOT NULL,
   `descripcion` text DEFAULT NULL,
@@ -82,14 +81,14 @@ CREATE TABLE `habitaciones` (
 -- Volcado de datos para la tabla `habitaciones`
 --
 
-INSERT INTO `habitaciones` (`id_habitacion`, `numero_habitacion`, `id_categoria`, `nombre`, `descripcion`, `precio_noche`, `capacidad_personas`, `cantidad_disponible`, `caracteristicas`, `activo`, `fecha_registro`) VALUES
-(1, '101', 1, 'Habitación Estándar Individual', 'Habitación acogedora con cama individual, ideal para viajeros solitarios', 850.00, 1, 5, 'TV de pantalla plana, WiFi gratuito, Aire acondicionado, Baño privado', 1, '2025-11-10 19:07:37'),
-(2, '102', 1, 'Habitación Estándar Doble', 'Habitación con dos camas matrimoniales, perfecta para familias pequeñas', 1200.00, 4, 8, 'TV de pantalla plana, WiFi gratuito, Aire acondicionado, Minibar, Baño privado', 1, '2025-11-10 19:07:37'),
-(3, '201', 2, 'Habitación Deluxe con Vista al Mar', 'Habitación elegante con balcón y vista panorámica al océano', 2500.00, 2, 4, 'Cama King Size, TV Smart, WiFi gratuito, Aire acondicionado, Minibar, Balcón privado, Cafetera, Baño con jacuzzi', 1, '2025-11-10 19:07:37'),
-(4, '202', 2, 'Habitación Deluxe Familiar', 'Espaciosa habitación con zona de estar, ideal para familias', 3000.00, 5, 3, 'Cama King Size + Sofá cama, TV Smart, WiFi gratuito, Aire acondicionado, Minibar, Sala de estar, Baño amplio', 1, '2025-11-10 19:07:37'),
-(5, '301', 3, 'Suite Romántica', 'Suite elegante con jacuzzi privado y decoración romántica', 4500.00, 2, 2, 'Cama King Size, TV Smart, WiFi gratuito, Aire acondicionado, Minibar premium, Sala de estar, Jacuzzi privado, Balcón con vista al mar, Servicio de habitación 24h', 1, '2025-11-10 19:07:37'),
-(6, '302', 3, 'Suite Familiar Premium', 'Amplia suite de dos habitaciones con todas las comodidades', 5500.00, 6, 2, '2 habitaciones, Cama King Size + 2 Matrimoniales, 2 TV Smart, WiFi gratuito, Aire acondicionado, Minibar premium, Sala de estar, Comedor, 2 baños completos', 1, '2025-11-10 19:07:37'),
-(7, '401', 4, 'Suite Presidencial', 'La experiencia definitiva en lujo y confort con servicios exclusivos', 8500.00, 4, 1, 'Habitación principal King Size + Habitación secundaria, 3 TV Smart, WiFi premium, Aire acondicionado, Bar completo, Sala de estar amplia, Comedor privado, Terraza privada, 2 baños de lujo con jacuzzi, Mayordomo personal, Servicio de habitación 24h', 1, '2025-11-10 19:07:37');
+INSERT INTO `habitaciones` (`id_habitacion`, `id_categoria`, `nombre`, `descripcion`, `precio_noche`, `capacidad_personas`, `cantidad_disponible`, `caracteristicas`, `activo`, `fecha_registro`) VALUES
+(1, 1, 'Habitación Estándar Individual', 'Habitación acogedora con cama individual, ideal para viajeros solitarios', 850.00, 1, 5, 'TV de pantalla plana, WiFi gratuito, Aire acondicionado, Baño privado', 1, '2025-11-10 19:07:37'),
+(2, 1, 'Habitación Estándar Doble', 'Habitación con dos camas matrimoniales, perfecta para familias pequeñas', 1200.00, 4, 8, 'TV de pantalla plana, WiFi gratuito, Aire acondicionado, Minibar, Baño privado', 1, '2025-11-10 19:07:37'),
+(3, 2, 'Habitación Deluxe con Vista al Mar', 'Habitación elegante con balcón y vista panorámica al océano', 2500.00, 2, 4, 'Cama King Size, TV Smart, WiFi gratuito, Aire acondicionado, Minibar, Balcón privado, Cafetera, Baño con jacuzzi', 1, '2025-11-10 19:07:37'),
+(4, 2, 'Habitación Deluxe Familiar', 'Espaciosa habitación con zona de estar, ideal para familias', 3000.00, 5, 3, 'Cama King Size + Sofá cama, TV Smart, WiFi gratuito, Aire acondicionado, Minibar, Sala de estar, Baño amplio', 1, '2025-11-10 19:07:37'),
+(5, 3, 'Suite Romántica', 'Suite elegante con jacuzzi privado y decoración romántica', 4500.00, 2, 2, 'Cama King Size, TV Smart, WiFi gratuito, Aire acondicionado, Minibar premium, Sala de estar, Jacuzzi privado, Balcón con vista al mar, Servicio de habitación 24h', 1, '2025-11-10 19:07:37'),
+(6, 3, 'Suite Familiar Premium', 'Amplia suite de dos habitaciones con todas las comodidades', 5500.00, 6, 2, '2 habitaciones, Cama King Size + 2 Matrimoniales, 2 TV Smart, WiFi gratuito, Aire acondicionado, Minibar premium, Sala de estar, Comedor, 2 baños completos', 1, '2025-11-10 19:07:37'),
+(7, 4, 'Suite Presidencial', 'La experiencia definitiva en lujo y confort con servicios exclusivos', 8500.00, 4, 1, 'Habitación principal King Size + Habitación secundaria, 3 TV Smart, WiFi premium, Aire acondicionado, Bar completo, Sala de estar amplia, Comedor privado, Terraza privada, 2 baños de lujo con jacuzzi, Mayordomo personal, Servicio de habitación 24h', 1, '2025-11-10 19:07:37');
 
 -- --------------------------------------------------------
 
@@ -185,7 +184,6 @@ INSERT INTO `usuarios` (`id_usuario`, `nombre_usuario`, `contrasena`, `nombre_co
 --
 CREATE TABLE `vista_habitaciones_completa` (
 `id_habitacion` int(11)
-,`numero_habitacion` varchar(20)
 ,`nombre` varchar(100)
 ,`descripcion` text
 ,`precio_noche` decimal(10,2)
@@ -231,7 +229,7 @@ CREATE TABLE `vista_reservaciones_completa` (
 --
 DROP TABLE IF EXISTS `vista_habitaciones_completa`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vista_habitaciones_completa`  AS SELECT `h`.`id_habitacion` AS `id_habitacion`, `h`.`numero_habitacion` AS `numero_habitacion`, `h`.`nombre` AS `nombre`, `h`.`descripcion` AS `descripcion`, `h`.`precio_noche` AS `precio_noche`, `h`.`capacidad_personas` AS `capacidad_personas`, `h`.`cantidad_disponible` AS `cantidad_disponible`, `h`.`caracteristicas` AS `caracteristicas`, `h`.`activo` AS `activo`, `c`.`id_categoria` AS `id_categoria`, `c`.`nombre_categoria` AS `nombre_categoria`, `c`.`descripcion` AS `categoria_descripcion`, (select count(0) from `imagenes_habitacion` where `imagenes_habitacion`.`id_habitacion` = `h`.`id_habitacion`) AS `total_imagenes`, (select `imagenes_habitacion`.`ruta_archivo` from `imagenes_habitacion` where `imagenes_habitacion`.`id_habitacion` = `h`.`id_habitacion` and `imagenes_habitacion`.`es_principal` = 1 limit 1) AS `imagen_principal` FROM (`habitaciones` `h` join `categorias_habitacion` `c` on(`h`.`id_categoria` = `c`.`id_categoria`)) ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vista_habitaciones_completa`  AS SELECT `h`.`id_habitacion` AS `id_habitacion`, `h`.`nombre` AS `nombre`, `h`.`descripcion` AS `descripcion`, `h`.`precio_noche` AS `precio_noche`, `h`.`capacidad_personas` AS `capacidad_personas`, `h`.`cantidad_disponible` AS `cantidad_disponible`, `h`.`caracteristicas` AS `caracteristicas`, `h`.`activo` AS `activo`, `c`.`id_categoria` AS `id_categoria`, `c`.`nombre_categoria` AS `nombre_categoria`, `c`.`descripcion` AS `categoria_descripcion`, (select count(0) from `imagenes_habitacion` where `imagenes_habitacion`.`id_habitacion` = `h`.`id_habitacion`) AS `total_imagenes`, (select `imagenes_habitacion`.`ruta_archivo` from `imagenes_habitacion` where `imagenes_habitacion`.`id_habitacion` = `h`.`id_habitacion` and `imagenes_habitacion`.`es_principal` = 1 limit 1) AS `imagen_principal` FROM (`habitaciones` `h` join `categorias_habitacion` `c` on(`h`.`id_categoria` = `c`.`id_categoria`)) ;
 
 -- --------------------------------------------------------
 
@@ -267,7 +265,6 @@ ALTER TABLE `detalles_reservacion`
 --
 ALTER TABLE `habitaciones`
   ADD PRIMARY KEY (`id_habitacion`),
-  ADD UNIQUE KEY `numero_habitacion` (`numero_habitacion`),
   ADD KEY `idx_categoria` (`id_categoria`),
   ADD KEY `idx_activo` (`activo`);
 

@@ -216,7 +216,7 @@ function mostrarModalDetalles(reservacion) {
             <h3>Habitaciones Reservadas</h3>
             ${reservacion.detalles.map(d => `
                 <div style="background-color: #f8f9fa; padding: 1rem; border-radius: 4px; margin-bottom: 0.5rem;">
-                    <p><strong>${sanitizarHTML(d.nombre)}</strong> (${sanitizarHTML(d.numero_habitacion)})</p>
+                    <p><strong>${sanitizarHTML(d.nombre)}</strong> (ID: ${d.id_habitacion})</p>
                     <p>Cantidad: ${d.cantidad_habitaciones} habitación(es)</p>
                     <p>Precio por habitación: ${formatearPrecio(d.precio_unitario)}</p>
                     <p>Subtotal: ${formatearPrecio(d.subtotal)}</p>

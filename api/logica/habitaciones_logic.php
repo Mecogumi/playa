@@ -24,9 +24,9 @@ function listarHabitaciones() {
     $mostrarTodas = isset($_SESSION['usuario_tipo']) && $_SESSION['usuario_tipo'] === 'admin';
 
     if ($mostrarTodas) {
-        $sql = "SELECT * FROM vista_habitaciones_completa ORDER BY numero_habitacion";
+        $sql = "SELECT * FROM vista_habitaciones_completa ORDER BY id_habitacion";
     } else {
-        $sql = "SELECT * FROM vista_habitaciones_completa WHERE activo = 1 ORDER BY numero_habitacion";
+        $sql = "SELECT * FROM vista_habitaciones_completa WHERE activo = 1 ORDER BY id_habitacion";
     }
 
     $result = mysqli_query($conn, $sql);
@@ -118,7 +118,7 @@ function obtenerHabitacion($id) {
 }
 
 function crearHabitacion($datos) {
-    if (empty($datos['numero_habitacion']) || empty($datos['id_categoria']) ||
+    if (empty($datos['id_categoria']) ||
         empty($datos['nombre']) || empty($datos['precio_noche']) ||
         empty($datos['capacidad_personas']) || empty($datos['cantidad_disponible'])) {
         respuestaError('Todos los campos obligatorios deben ser completados');
@@ -128,15 +128,6 @@ function crearHabitacion($datos) {
     $conn = abrirConexion();
     seleccionarBaseDatos($conn);
 
-    $numeroHabitacion = mysqli_real_escape_string($conn, $datos['numero_habitacion']);
-    $sqlVerificar = "SELECT id_habitacion FROM habitaciones WHERE numero_habitacion = '$numeroHabitacion'";
-
-    if (existeRegistro($conn, $sqlVerificar)) {
-        cerrarConexion($conn);
-        respuestaError('El número de habitación ya existe');
-        return;
-    }
-
     $idCategoria = mysqli_real_escape_string($conn, $datos['id_categoria']);
     $nombre = mysqli_real_escape_string($conn, $datos['nombre']);
     $descripcion = isset($datos['descripcion']) ? mysqli_real_escape_string($conn, $datos['descripcion']) : '';
@@ -145,9 +136,9 @@ function crearHabitacion($datos) {
     $cantidadDisponible = mysqli_real_escape_string($conn, $datos['cantidad_disponible']);
     $caracteristicas = isset($datos['caracteristicas']) ? mysqli_real_escape_string($conn, $datos['caracteristicas']) : '';
 
-    $sqlInsertar = "INSERT INTO habitaciones (numero_habitacion, id_categoria, nombre, descripcion,
+    $sqlInsertar = "INSERT INTO habitaciones (id_categoria, nombre, descripcion,
                     precio_noche, capacidad_personas, cantidad_disponible, caracteristicas)
-                    VALUES ('$numeroHabitacion', '$idCategoria', '$nombre', '$descripcion',
+                    VALUES ('$idCategoria', '$nombre', '$descripcion',
                     '$precioNoche', '$capacidadPersonas', '$cantidadDisponible', '$caracteristicas')";
 
     $resultado = insertarDatos($conn, $sqlInsertar);
@@ -245,7 +236,7 @@ function listarPorCategoria($idCategoria) {
         $sql .= " AND id_categoria = '$idCategoriaEscapado'";
     }
 
-    $sql .= " ORDER BY numero_habitacion";
+    $sql .= " ORDER BY id_habitacion";
 
     $result = mysqli_query($conn, $sql);
 
@@ -337,20 +328,18 @@ function buscarHabitaciones($termino) {
                     nombre LIKE '$terminoBusqueda' OR
                     descripcion LIKE '$terminoBusqueda' OR
                     caracteristicas LIKE '$terminoBusqueda' OR
-                    nombre_categoria LIKE '$terminoBusqueda' OR
-                    numero_habitacion LIKE '$terminoBusqueda'
+                    nombre_categoria LIKE '$terminoBusqueda'
                 )
-                ORDER BY numero_habitacion";
+                ORDER BY id_habitacion";
     } else {
         $sql = "SELECT * FROM vista_habitaciones_completa
                 WHERE activo = 1 AND (
                     nombre LIKE '$terminoBusqueda' OR
                     descripcion LIKE '$terminoBusqueda' OR
                     caracteristicas LIKE '$terminoBusqueda' OR
-                    nombre_categoria LIKE '$terminoBusqueda' OR
-                    numero_habitacion LIKE '$terminoBusqueda'
+                    nombre_categoria LIKE '$terminoBusqueda'
                 )
-                ORDER BY numero_habitacion";
+                ORDER BY id_habitacion";
     }
 
     $result = mysqli_query($conn, $sql);

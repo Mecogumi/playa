@@ -68,7 +68,6 @@ function agregarAlCarrito(habitacion, cantidad = 1) {
     } else {
         carrito.push({
             id_habitacion: habitacion.id_habitacion,
-            numero_habitacion: habitacion.numero_habitacion,
             nombre: habitacion.nombre,
             nombre_categoria: habitacion.nombre_categoria,
             precio_noche: parseFloat(habitacion.precio_noche),

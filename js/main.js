@@ -158,7 +158,7 @@ function mostrarModalDetalles(habitacion) {
 
         <div style="margin: 1.5rem 0;">
             <h3>Detalles</h3>
-            <p><strong>Número:</strong> ${sanitizarHTML(habitacion.numero_habitacion)}</p>
+            <p><strong>ID Habitación:</strong> ${habitacion.id_habitacion}</p>
             <p><strong>Capacidad:</strong> ${habitacion.capacidad_personas} personas</p>
             <p><strong>Disponibles:</strong> ${habitacion.cantidad_disponible} habitaciones</p>
             <p><strong>Precio por noche:</strong> ${formatearPrecio(habitacion.precio_noche)}</p>
