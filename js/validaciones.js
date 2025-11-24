@@ -20,7 +20,6 @@ function validarEmail(email) {
     if (!email || email.trim() === '') {
         return 'El email es requerido';
     }
-    console.log(email)
     const regex = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
     if (!regex.test(email)) {
         return 'El email no es válido2';

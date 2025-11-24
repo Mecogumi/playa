@@ -170,6 +170,7 @@ function llenarFormularioEdicion(usuario) {
 
 async function handleGuardarUsuario(e) {
     e.preventDefault();
+    limpiarErroresFormulario('formUsuario');
 
     const accion = document.getElementById('accion').value;
     const formData = new FormData(e.target);
@@ -181,32 +182,35 @@ async function handleGuardarUsuario(e) {
         telefono: formData.get('telefono'),
         tipo_usuario: formData.get('tipo_usuario')
     };
-    console.log(datos)
 
     const contrasena = formData.get('contrasena');
     const confirmarContrasena = formData.get('confirmar_contrasena');
 
+    // Validar contraseñas
     if (accion === 'crear') {
         if (!contrasena || contrasena.length < 6) {
-            mostrarError('contrasena', 'La contraseña debe tener al menos 6 caracteres');
+            mostrarError('Contrasena', 'La contraseña debe tener al menos 6 caracteres');
+            return;
+        }
+        if (contrasena !== confirmarContrasena) {
+            mostrarError('ConfirmarContrasena', 'Las contraseñas no coinciden');
             return;
         }
         datos.contrasena = contrasena;
     } else {
         if (contrasena) {
             if (contrasena.length < 6) {
-                mostrarError('contrasena', 'La contraseña debe tener al menos 6 caracteres');
+                mostrarError('Contrasena', 'La contraseña debe tener al menos 6 caracteres');
+                return;
+            }
+            if (contrasena !== confirmarContrasena) {
+                mostrarError('ConfirmarContrasena', 'Las contraseñas no coinciden');
                 return;
             }
             datos.contrasena = contrasena;
         }
         datos.id_usuario = parseInt(formData.get('id_usuario'));
         datos.activo = parseInt(formData.get('activo'));
-    }
-
-    if (contrasena && contrasena !== confirmarContrasena) {
-        mostrarError('confirmar_contrasena', 'Las contraseñas no coinciden');
-        return;
     }
 
     if (!validarFormularioUsuario(datos)) return;
