@@ -111,12 +111,6 @@ function eliminarDelCarrito(idHabitacion) {
     return true;
 }
 function limpiarCarrito() {
-    if (obtenerCarrito().length > 0) {
-        if (!confirm('¿Estás seguro de que deseas vaciar el carrito?')) {
-            return false;
-        }
-    }
-
     deleteCookie(COOKIE_NOMBRE);
     actualizarBadgeCarrito();
     return true;

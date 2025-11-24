@@ -120,7 +120,6 @@ function requerirAutenticacion(tipoRequerido = null) {
     }
 
     if (tipoRequerido && usuario.tipo !== tipoRequerido) {
-        alert('No tienes permisos para acceder a esta página');
         window.location.href = 'index.html';
         return false;
     }
