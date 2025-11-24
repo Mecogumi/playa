@@ -99,9 +99,6 @@ function mostrarUsuariosTabla(usuarios) {
             <td>${formatearFecha(usuario.fecha_registro)}</td>
             <td>
                 <button class="btn btn-secondary btn-small" onclick="editarUsuario(${usuario.id_usuario})" style="margin-right:0.5rem;">Editar</button>
-                ${!esUsuarioActual ? `
-                    <button class="btn btn-danger btn-small" onclick="confirmarEliminarUsuario(${usuario.id_usuario})">Desactivar</button>
-                ` : '<span style="font-size:0.8rem;color:#666;">Tu cuenta</span>'}
             </td>
         `;
         tbody.appendChild(tr);
