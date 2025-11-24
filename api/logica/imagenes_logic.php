@@ -30,8 +30,21 @@ function subirImagenes() {
 
     $directorioDestino = __DIR__ . '/../../uploads/habitaciones/';
 
+    // Crear directorio si no existe
     if (!file_exists($directorioDestino)) {
-        mkdir($directorioDestino, 0777, true);
+        if (!mkdir($directorioDestino, 0777, true)) {
+            cerrarConexion($conn);
+            respuestaError('No se pudo crear el directorio de destino. Verifica los permisos de la carpeta uploads/');
+            return;
+        }
+        chmod($directorioDestino, 0777);
+    }
+
+    // Verificar que el directorio tenga permisos de escritura
+    if (!is_writable($directorioDestino)) {
+        cerrarConexion($conn);
+        respuestaError('El directorio de destino no tiene permisos de escritura. Por favor, ejecuta: chmod -R 777 uploads/habitaciones/');
+        return;
     }
 
     $archivosSubidos = [];
@@ -65,7 +78,8 @@ function subirImagenes() {
             $nombreNuevo = 'hab_' . $idHabitacion . '_' . uniqid() . '.' . $extensionArchivo;
             $rutaCompleta = $directorioDestino . $nombreNuevo;
 
-            if (move_uploaded_file($tmpName, $rutaCompleta)) {
+            // Intentar mover el archivo
+            if (@move_uploaded_file($tmpName, $rutaCompleta)) {
                 $rutaRelativa = 'uploads/habitaciones/' . $nombreNuevo;
 
                 $esPrincipal = (!$hayPrincipal && $i === 0) ? 1 : 0;
@@ -96,7 +110,7 @@ function subirImagenes() {
                     unlink($rutaCompleta);
                 }
             } else {
-                $errores[] = "Error al subir $nombreArchivo";
+                $errores[] = "Error al subir $nombreArchivo. Verifica permisos del directorio uploads/habitaciones/ (chmod 777)";
             }
         } else {
             $errores[] = "Error en el archivo $nombreArchivo: código " . $_FILES['imagenes']['error'][$i];
