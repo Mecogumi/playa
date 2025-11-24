@@ -1,5 +1,6 @@
 <?php
-require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../../config.inc.php';
+require_once __DIR__ . '/../acceder_base_datos.php';
 require_once __DIR__ . '/helpers.php';
 
 function verificarUsuario() {
@@ -48,18 +49,19 @@ function crearReservacion($datos) {
         }
     }
 
-    $conn = obtenerConexion();
+    $conn = abrirConexion();
     if (!$conn) {
         respuestaError('Error de conexión a la base de datos');
         return;
     }
+    seleccionarBaseDatos($conn);
 
     $conn->begin_transaction();
 
     try {
-        $idUsuario = $_SESSION['usuario_id'];
-        $fechaEntrada = $datos['fecha_entrada'];
-        $fechaSalida = $datos['fecha_salida'];
+        $idUsuario = intval($_SESSION['usuario_id']);
+        $fechaEntrada = mysqli_real_escape_string($conn, $datos['fecha_entrada']);
+        $fechaSalida = mysqli_real_escape_string($conn, $datos['fecha_salida']);
 
         $entrada = new DateTime($fechaEntrada);
         $salida = new DateTime($fechaSalida);
@@ -73,19 +75,18 @@ function crearReservacion($datos) {
         $detalles = [];
 
         foreach ($habitaciones as $habitacion) {
-            $idHabitacion = $habitacion['id_habitacion'];
-            $cantidad = $habitacion['cantidad'];
+            $idHabitacion = intval($habitacion['id_habitacion']);
+            $cantidad = intval($habitacion['cantidad']);
 
             $sqlVerificar = "SELECT id_habitacion, cantidad_disponible, precio_noche, nombre
                             FROM habitaciones
-                            WHERE id_habitacion = ? AND activo = 1";
-            $resultado = ejecutarConsulta($conn, $sqlVerificar, "i", [$idHabitacion]);
+                            WHERE id_habitacion = $idHabitacion AND activo = 1";
 
-            if (empty($resultado)) {
+            $hab = extraerRegistro($conn, $sqlVerificar);
+
+            if (empty($hab)) {
                 throw new Exception("La habitación con ID $idHabitacion no existe o no está disponible");
             }
-
-            $hab = $resultado[0];
 
             if ($hab['cantidad_disponible'] < $cantidad) {
                 throw new Exception("No hay suficientes habitaciones disponibles de tipo '{$hab['nombre']}'. Disponibles: {$hab['cantidad_disponible']}, Solicitadas: $cantidad");
@@ -103,11 +104,12 @@ function crearReservacion($datos) {
             ];
 
             $sqlDescontar = "UPDATE habitaciones
-                            SET cantidad_disponible = cantidad_disponible - ?
-                            WHERE id_habitacion = ?";
-            $resultadoDescontar = ejecutarModificacion($conn, $sqlDescontar, "ii", [$cantidad, $idHabitacion]);
+                            SET cantidad_disponible = cantidad_disponible - $cantidad
+                            WHERE id_habitacion = $idHabitacion";
 
-            if (!$resultadoDescontar['success']) {
+            $resultadoDescontar = editarDatos($conn, $sqlDescontar);
+
+            if (!$resultadoDescontar) {
                 throw new Exception("Error al descontar habitaciones disponibles");
             }
         }
@@ -115,41 +117,26 @@ function crearReservacion($datos) {
         $impuestos = $subtotal * 0.16;
         $total = $subtotal + $impuestos;
 
+        $notas = isset($datos['notas']) ? mysqli_real_escape_string($conn, $datos['notas']) : '';
+
         $sqlReservacion = "INSERT INTO reservaciones (id_usuario, fecha_entrada, fecha_salida, numero_noches, subtotal, impuestos, total, estado_reservacion, notas)
-                          VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmada', ?)";
+                          VALUES ($idUsuario, '$fechaEntrada', '$fechaSalida', $numeroNoches, $subtotal, $impuestos, $total, 'confirmada', '$notas')";
 
-        $notas = isset($datos['notas']) ? $datos['notas'] : '';
+        $resultadoReservacion = insertarDatos($conn, $sqlReservacion);
 
-        $resultadoReservacion = ejecutarModificacion($conn, $sqlReservacion, "issiddds", [
-            $idUsuario,
-            $fechaEntrada,
-            $fechaSalida,
-            $numeroNoches,
-            $subtotal,
-            $impuestos,
-            $total,
-            $notas
-        ]);
-
-        if (!$resultadoReservacion['success']) {
+        if (!$resultadoReservacion) {
             throw new Exception("Error al crear la reservación");
         }
 
-        $idReservacion = $resultadoReservacion['id'];
+        $idReservacion = mysqli_insert_id($conn);
 
         foreach ($detalles as $detalle) {
             $sqlDetalle = "INSERT INTO detalles_reservacion (id_reservacion, id_habitacion, cantidad_habitaciones, precio_unitario, subtotal)
-                          VALUES (?, ?, ?, ?, ?)";
+                          VALUES ($idReservacion, {$detalle['id_habitacion']}, {$detalle['cantidad']}, {$detalle['precio_unitario']}, {$detalle['subtotal']})";
 
-            $resultadoDetalle = ejecutarModificacion($conn, $sqlDetalle, "iiidd", [
-                $idReservacion,
-                $detalle['id_habitacion'],
-                $detalle['cantidad'],
-                $detalle['precio_unitario'],
-                $detalle['subtotal']
-            ]);
+            $resultadoDetalle = insertarDatos($conn, $sqlDetalle);
 
-            if (!$resultadoDetalle['success']) {
+            if (!$resultadoDetalle) {
                 throw new Exception("Error al guardar los detalles de la reservación");
             }
         }
@@ -179,21 +166,45 @@ function listarReservaciones() {
         return;
     }
 
-    $conn = obtenerConexion();
+    $conn = abrirConexion();
     if (!$conn) {
         respuestaError('Error de conexión a la base de datos');
         return;
     }
+    seleccionarBaseDatos($conn);
 
     $sql = "SELECT * FROM vista_reservaciones_completa ORDER BY fecha_reservacion DESC";
-    $reservaciones = ejecutarConsulta($conn, $sql);
+
+    // Obtener múltiples registros usando mysqli_query y mysqli_fetch_array
+    $result = mysqli_query($conn, $sql);
+    if (!$result) {
+        cerrarConexion($conn);
+        respuestaError('Error al obtener las reservaciones');
+        return;
+    }
+
+    $reservaciones = [];
+    while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+        $reservaciones[] = $row;
+    }
+    mysqli_free_result($result);
 
     foreach ($reservaciones as &$reservacion) {
+        $idReservacion = intval($reservacion['id_reservacion']);
         $sqlDetalles = "SELECT dr.*, h.nombre, h.numero_habitacion
                        FROM detalles_reservacion dr
                        INNER JOIN habitaciones h ON dr.id_habitacion = h.id_habitacion
-                       WHERE dr.id_reservacion = ?";
-        $reservacion['detalles'] = ejecutarConsulta($conn, $sqlDetalles, "i", [$reservacion['id_reservacion']]);
+                       WHERE dr.id_reservacion = $idReservacion";
+
+        $resultDetalles = mysqli_query($conn, $sqlDetalles);
+        $detalles = [];
+        if ($resultDetalles) {
+            while ($detalle = mysqli_fetch_array($resultDetalles, MYSQLI_ASSOC)) {
+                $detalles[] = $detalle;
+            }
+            mysqli_free_result($resultDetalles);
+        }
+        $reservacion['detalles'] = $detalles;
     }
 
     cerrarConexion($conn);
@@ -202,23 +213,47 @@ function listarReservaciones() {
 }
 
 function listarMisReservaciones() {
-    $conn = obtenerConexion();
+    $conn = abrirConexion();
     if (!$conn) {
         respuestaError('Error de conexión a la base de datos');
         return;
     }
+    seleccionarBaseDatos($conn);
 
-    $idUsuario = $_SESSION['usuario_id'];
+    $idUsuario = intval($_SESSION['usuario_id']);
 
-    $sql = "SELECT * FROM vista_reservaciones_completa WHERE id_usuario = ? ORDER BY fecha_reservacion DESC";
-    $reservaciones = ejecutarConsulta($conn, $sql, "i", [$idUsuario]);
+    $sql = "SELECT * FROM vista_reservaciones_completa WHERE id_usuario = $idUsuario ORDER BY fecha_reservacion DESC";
+
+    // Obtener múltiples registros usando mysqli_query y mysqli_fetch_array
+    $result = mysqli_query($conn, $sql);
+    if (!$result) {
+        cerrarConexion($conn);
+        respuestaError('Error al obtener las reservaciones');
+        return;
+    }
+
+    $reservaciones = [];
+    while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+        $reservaciones[] = $row;
+    }
+    mysqli_free_result($result);
 
     foreach ($reservaciones as &$reservacion) {
+        $idReservacion = intval($reservacion['id_reservacion']);
         $sqlDetalles = "SELECT dr.*, h.nombre, h.numero_habitacion
                        FROM detalles_reservacion dr
                        INNER JOIN habitaciones h ON dr.id_habitacion = h.id_habitacion
-                       WHERE dr.id_reservacion = ?";
-        $reservacion['detalles'] = ejecutarConsulta($conn, $sqlDetalles, "i", [$reservacion['id_reservacion']]);
+                       WHERE dr.id_reservacion = $idReservacion";
+
+        $resultDetalles = mysqli_query($conn, $sqlDetalles);
+        $detalles = [];
+        if ($resultDetalles) {
+            while ($detalle = mysqli_fetch_array($resultDetalles, MYSQLI_ASSOC)) {
+                $detalles[] = $detalle;
+            }
+            mysqli_free_result($resultDetalles);
+        }
+        $reservacion['detalles'] = $detalles;
     }
 
     cerrarConexion($conn);
@@ -232,33 +267,44 @@ function obtenerReservacion($id) {
         return;
     }
 
-    $conn = obtenerConexion();
+    $conn = abrirConexion();
     if (!$conn) {
         respuestaError('Error de conexión a la base de datos');
         return;
     }
+    seleccionarBaseDatos($conn);
 
-    $sql = "SELECT * FROM vista_reservaciones_completa WHERE id_reservacion = ?";
+    $id = intval($id);
+    $sql = "SELECT * FROM vista_reservaciones_completa WHERE id_reservacion = $id";
 
     if ($_SESSION['usuario_tipo'] !== 'admin') {
-        $sql .= " AND id_usuario = " . $_SESSION['usuario_id'];
+        $idUsuario = intval($_SESSION['usuario_id']);
+        $sql .= " AND id_usuario = $idUsuario";
     }
 
-    $resultado = ejecutarConsulta($conn, $sql, "i", [$id]);
+    $reservacion = extraerRegistro($conn, $sql);
 
-    if (empty($resultado)) {
+    if (empty($reservacion)) {
         cerrarConexion($conn);
         respuestaError('Reservación no encontrada', 404);
         return;
     }
 
-    $reservacion = $resultado[0];
-
+    $idReservacion = intval($reservacion['id_reservacion']);
     $sqlDetalles = "SELECT dr.*, h.nombre, h.numero_habitacion
                    FROM detalles_reservacion dr
                    INNER JOIN habitaciones h ON dr.id_habitacion = h.id_habitacion
-                   WHERE dr.id_reservacion = ?";
-    $reservacion['detalles'] = ejecutarConsulta($conn, $sqlDetalles, "i", [$id]);
+                   WHERE dr.id_reservacion = $idReservacion";
+
+    $resultDetalles = mysqli_query($conn, $sqlDetalles);
+    $detalles = [];
+    if ($resultDetalles) {
+        while ($detalle = mysqli_fetch_array($resultDetalles, MYSQLI_ASSOC)) {
+            $detalles[] = $detalle;
+        }
+        mysqli_free_result($resultDetalles);
+    }
+    $reservacion['detalles'] = $detalles;
 
     cerrarConexion($conn);
 
@@ -271,29 +317,30 @@ function cancelarReservacion($id) {
         return;
     }
 
-    $conn = obtenerConexion();
+    $conn = abrirConexion();
     if (!$conn) {
         respuestaError('Error de conexión a la base de datos');
         return;
     }
+    seleccionarBaseDatos($conn);
 
+    $id = intval($id);
     $sqlVerificar = "SELECT id_reservacion, id_usuario, estado_reservacion
                     FROM reservaciones
-                    WHERE id_reservacion = ?";
+                    WHERE id_reservacion = $id";
 
     if ($_SESSION['usuario_tipo'] !== 'admin') {
-        $sqlVerificar .= " AND id_usuario = " . $_SESSION['usuario_id'];
+        $idUsuario = intval($_SESSION['usuario_id']);
+        $sqlVerificar .= " AND id_usuario = $idUsuario";
     }
 
-    $resultado = ejecutarConsulta($conn, $sqlVerificar, "i", [$id]);
+    $reservacion = extraerRegistro($conn, $sqlVerificar);
 
-    if (empty($resultado)) {
+    if (empty($reservacion)) {
         cerrarConexion($conn);
         respuestaError('Reservación no encontrada', 404);
         return;
     }
-
-    $reservacion = $resultado[0];
 
     if ($reservacion['estado_reservacion'] === 'cancelada') {
         cerrarConexion($conn);
@@ -304,25 +351,40 @@ function cancelarReservacion($id) {
     $conn->begin_transaction();
 
     try {
+        $idReservacion = intval($reservacion['id_reservacion']);
         $sqlDetalles = "SELECT id_habitacion, cantidad_habitaciones
                        FROM detalles_reservacion
-                       WHERE id_reservacion = ?";
-        $detalles = ejecutarConsulta($conn, $sqlDetalles, "i", [$id]);
+                       WHERE id_reservacion = $idReservacion";
 
-        foreach ($detalles as $detalle) {
-            $sqlDevolver = "UPDATE habitaciones
-                          SET cantidad_disponible = cantidad_disponible + ?
-                          WHERE id_habitacion = ?";
-            ejecutarModificacion($conn, $sqlDevolver, "ii", [
-                $detalle['cantidad_habitaciones'],
-                $detalle['id_habitacion']
-            ]);
+        $resultDetalles = mysqli_query($conn, $sqlDetalles);
+        if (!$resultDetalles) {
+            throw new Exception("Error al obtener los detalles de la reservación");
         }
 
-        $sqlCancelar = "UPDATE reservaciones SET estado_reservacion = 'cancelada' WHERE id_reservacion = ?";
-        $resultadoCancelar = ejecutarModificacion($conn, $sqlCancelar, "i", [$id]);
+        $detalles = [];
+        while ($detalle = mysqli_fetch_array($resultDetalles, MYSQLI_ASSOC)) {
+            $detalles[] = $detalle;
+        }
+        mysqli_free_result($resultDetalles);
 
-        if (!$resultadoCancelar['success']) {
+        foreach ($detalles as $detalle) {
+            $idHabitacion = intval($detalle['id_habitacion']);
+            $cantidadHabitaciones = intval($detalle['cantidad_habitaciones']);
+
+            $sqlDevolver = "UPDATE habitaciones
+                          SET cantidad_disponible = cantidad_disponible + $cantidadHabitaciones
+                          WHERE id_habitacion = $idHabitacion";
+
+            $resultadoDevolver = editarDatos($conn, $sqlDevolver);
+            if (!$resultadoDevolver) {
+                throw new Exception("Error al devolver las habitaciones disponibles");
+            }
+        }
+
+        $sqlCancelar = "UPDATE reservaciones SET estado_reservacion = 'cancelada' WHERE id_reservacion = $idReservacion";
+        $resultadoCancelar = editarDatos($conn, $sqlCancelar);
+
+        if (!$resultadoCancelar) {
             throw new Exception("Error al cancelar la reservación");
         }
 
@@ -344,17 +406,29 @@ function verificarDisponibilidad($datos) {
         return;
     }
 
-    $conn = obtenerConexion();
+    $conn = abrirConexion();
     if (!$conn) {
         respuestaError('Error de conexión a la base de datos');
         return;
     }
+    seleccionarBaseDatos($conn);
 
     $sql = "SELECT id_habitacion, numero_habitacion, nombre, cantidad_disponible, precio_noche
             FROM habitaciones
             WHERE activo = 1 AND cantidad_disponible > 0";
 
-    $habitaciones = ejecutarConsulta($conn, $sql);
+    $result = mysqli_query($conn, $sql);
+    if (!$result) {
+        cerrarConexion($conn);
+        respuestaError('Error al obtener las habitaciones disponibles');
+        return;
+    }
+
+    $habitaciones = [];
+    while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+        $habitaciones[] = $row;
+    }
+    mysqli_free_result($result);
 
     cerrarConexion($conn);
 

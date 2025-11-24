@@ -1,5 +1,6 @@
 <?php
-require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../../config.inc.php';
+require_once __DIR__ . '/../acceder_base_datos.php';
 require_once __DIR__ . '/helpers.php';
 
 function verificarAdmin() {
@@ -15,18 +16,34 @@ function verificarAdmin() {
 }
 
 function listarUsuarios() {
-    $conn = obtenerConexion();
+    $conn = abrirConexion();
     if (!$conn) {
         respuestaError('Error de conexión a la base de datos');
         return;
     }
 
+    seleccionarBaseDatos($conn);
+
     $sql = "SELECT id_usuario, nombre_usuario, nombre_completo, email, telefono, tipo_usuario, activo, fecha_registro
             FROM usuarios
             ORDER BY fecha_registro DESC";
 
-    $usuarios = ejecutarConsulta($conn, $sql);
+    $result = mysqli_query($conn, $sql);
 
+    if (!$result) {
+        cerrarConexion($conn);
+        respuestaError('Error al obtener usuarios');
+        return;
+    }
+
+    $usuarios = array();
+    while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+        $row['activo'] = intval($row['activo']);
+        $row['id_usuario'] = intval($row['id_usuario']);
+        $usuarios[] = $row;
+    }
+
+    mysqli_free_result($result);
     cerrarConexion($conn);
 
     respuestaExito(['usuarios' => $usuarios]);
@@ -38,26 +55,33 @@ function obtenerUsuario($id) {
         return;
     }
 
-    $conn = obtenerConexion();
+    $conn = abrirConexion();
     if (!$conn) {
         respuestaError('Error de conexión a la base de datos');
         return;
     }
 
+    seleccionarBaseDatos($conn);
+
+    $id_escapado = mysqli_real_escape_string($conn, $id);
+
     $sql = "SELECT id_usuario, nombre_usuario, nombre_completo, email, telefono, tipo_usuario, activo, fecha_registro
             FROM usuarios
-            WHERE id_usuario = ?";
+            WHERE id_usuario = '$id_escapado'";
 
-    $resultado = ejecutarConsulta($conn, $sql, "i", [$id]);
+    $usuario = extraerRegistro($conn, $sql);
 
     cerrarConexion($conn);
 
-    if (empty($resultado)) {
+    if (empty($usuario)) {
         respuestaError('Usuario no encontrado', 404);
         return;
     }
 
-    respuestaExito(['usuario' => $resultado[0]]);
+    $usuario['activo'] = intval($usuario['activo']);
+    $usuario['id_usuario'] = intval($usuario['id_usuario']);
+
+    respuestaExito(['usuario' => $usuario]);
 }
 
 function crearUsuario($datos) {
@@ -83,16 +107,20 @@ function crearUsuario($datos) {
         return;
     }
 
-    $conn = obtenerConexion();
+    $conn = abrirConexion();
     if (!$conn) {
         respuestaError('Error de conexión a la base de datos');
         return;
     }
 
-    $sqlVerificar = "SELECT id_usuario FROM usuarios WHERE nombre_usuario = ? OR email = ?";
-    $resultado = ejecutarConsulta($conn, $sqlVerificar, "ss", [$datos['nombre_usuario'], $datos['email']]);
+    seleccionarBaseDatos($conn);
 
-    if (!empty($resultado)) {
+    $nombre_usuario_escapado = mysqli_real_escape_string($conn, $datos['nombre_usuario']);
+    $email_escapado = mysqli_real_escape_string($conn, $datos['email']);
+
+    $sqlVerificar = "SELECT id_usuario FROM usuarios WHERE nombre_usuario = '$nombre_usuario_escapado' OR email = '$email_escapado'";
+
+    if (existeRegistro($conn, $sqlVerificar)) {
         cerrarConexion($conn);
         respuestaError('El nombre de usuario o email ya están registrados');
         return;
@@ -100,29 +128,26 @@ function crearUsuario($datos) {
 
     $hashContrasena = hashearContrasena($datos['contrasena']);
 
+    $nombre_completo_escapado = mysqli_real_escape_string($conn, $datos['nombre_completo']);
+    $hash_escapado = mysqli_real_escape_string($conn, $hashContrasena);
+    $tipo_usuario_escapado = mysqli_real_escape_string($conn, $datos['tipo_usuario']);
+    $telefono = isset($datos['telefono']) ? "'" . mysqli_real_escape_string($conn, $datos['telefono']) . "'" : "NULL";
+
     $sqlInsertar = "INSERT INTO usuarios (nombre_usuario, contrasena, nombre_completo, email, telefono, tipo_usuario, activo)
-                    VALUES (?, ?, ?, ?, ?, ?, 1)";
+                    VALUES ('$nombre_usuario_escapado', '$hash_escapado', '$nombre_completo_escapado', '$email_escapado', $telefono, '$tipo_usuario_escapado', 1)";
 
-    $telefono = isset($datos['telefono']) ? $datos['telefono'] : null;
+    $resultado = insertarDatos($conn, $sqlInsertar);
 
-    $resultado = ejecutarModificacion($conn, $sqlInsertar, "ssssss", [
-        $datos['nombre_usuario'],
-        $hashContrasena,
-        $datos['nombre_completo'],
-        $datos['email'],
-        $telefono,
-        $datos['tipo_usuario']
-    ]);
-
-    cerrarConexion($conn);
-
-    if ($resultado['success']) {
+    if ($resultado) {
+        $id_insertado = mysqli_insert_id($conn);
+        cerrarConexion($conn);
         respuestaExito([
             'mensaje' => 'Usuario creado exitosamente',
-            'id_usuario' => $resultado['id']
+            'id_usuario' => $id_insertado
         ]);
     } else {
-        respuestaError('Error al crear usuario: ' . $resultado['error']);
+        cerrarConexion($conn);
+        respuestaError('Error al crear usuario');
     }
 }
 
@@ -138,20 +163,29 @@ function actualizarUsuario($datos) {
         return;
     }
 
-    $conn = obtenerConexion();
+    $conn = abrirConexion();
     if (!$conn) {
         respuestaError('Error de conexión a la base de datos');
         return;
     }
 
-    $sqlVerificar = "SELECT id_usuario FROM usuarios WHERE email = ? AND id_usuario != ?";
-    $resultado = ejecutarConsulta($conn, $sqlVerificar, "si", [$datos['email'], $datos['id_usuario']]);
+    seleccionarBaseDatos($conn);
 
-    if (!empty($resultado)) {
+    $email_escapado = mysqli_real_escape_string($conn, $datos['email']);
+    $id_usuario_escapado = mysqli_real_escape_string($conn, $datos['id_usuario']);
+
+    $sqlVerificar = "SELECT id_usuario FROM usuarios WHERE email = '$email_escapado' AND id_usuario != '$id_usuario_escapado'";
+
+    if (existeRegistro($conn, $sqlVerificar)) {
         cerrarConexion($conn);
         respuestaError('El email ya está registrado en otro usuario');
         return;
     }
+
+    $nombre_completo_escapado = mysqli_real_escape_string($conn, $datos['nombre_completo']);
+    $tipo_usuario_escapado = mysqli_real_escape_string($conn, $datos['tipo_usuario']);
+    $activo_valor = intval($datos['activo']);
+    $telefono = isset($datos['telefono']) ? "'" . mysqli_real_escape_string($conn, $datos['telefono']) . "'" : "NULL";
 
     if (!empty($datos['contrasena'])) {
         if (strlen($datos['contrasena']) < 6) {
@@ -161,43 +195,34 @@ function actualizarUsuario($datos) {
         }
 
         $hashContrasena = hashearContrasena($datos['contrasena']);
+        $hash_escapado = mysqli_real_escape_string($conn, $hashContrasena);
 
         $sqlActualizar = "UPDATE usuarios SET
-                          nombre_completo = ?, email = ?, telefono = ?,
-                          tipo_usuario = ?, activo = ?, contrasena = ?
-                          WHERE id_usuario = ?";
-
-        $resultado = ejecutarModificacion($conn, $sqlActualizar, "ssssiis", [
-            $datos['nombre_completo'],
-            $datos['email'],
-            isset($datos['telefono']) ? $datos['telefono'] : null,
-            $datos['tipo_usuario'],
-            $datos['activo'],
-            $hashContrasena,
-            $datos['id_usuario']
-        ]);
+                          nombre_completo = '$nombre_completo_escapado',
+                          email = '$email_escapado',
+                          telefono = $telefono,
+                          tipo_usuario = '$tipo_usuario_escapado',
+                          activo = $activo_valor,
+                          contrasena = '$hash_escapado'
+                          WHERE id_usuario = '$id_usuario_escapado'";
     } else {
         $sqlActualizar = "UPDATE usuarios SET
-                          nombre_completo = ?, email = ?, telefono = ?,
-                          tipo_usuario = ?, activo = ?
-                          WHERE id_usuario = ?";
-
-        $resultado = ejecutarModificacion($conn, $sqlActualizar, "ssssii", [
-            $datos['nombre_completo'],
-            $datos['email'],
-            isset($datos['telefono']) ? $datos['telefono'] : null,
-            $datos['tipo_usuario'],
-            $datos['activo'],
-            $datos['id_usuario']
-        ]);
+                          nombre_completo = '$nombre_completo_escapado',
+                          email = '$email_escapado',
+                          telefono = $telefono,
+                          tipo_usuario = '$tipo_usuario_escapado',
+                          activo = $activo_valor
+                          WHERE id_usuario = '$id_usuario_escapado'";
     }
+
+    $resultado = editarDatos($conn, $sqlActualizar);
 
     cerrarConexion($conn);
 
-    if ($resultado['success']) {
+    if ($resultado) {
         respuestaExito(['mensaje' => 'Usuario actualizado exitosamente']);
     } else {
-        respuestaError('Error al actualizar usuario: ' . $resultado['error']);
+        respuestaError('Error al actualizar usuario');
     }
 }
 
@@ -212,21 +237,26 @@ function eliminarUsuario($id) {
         return;
     }
 
-    $conn = obtenerConexion();
+    $conn = abrirConexion();
     if (!$conn) {
         respuestaError('Error de conexión a la base de datos');
         return;
     }
 
-    $sqlActualizar = "UPDATE usuarios SET activo = 0 WHERE id_usuario = ?";
-    $resultado = ejecutarModificacion($conn, $sqlActualizar, "i", [$id]);
+    seleccionarBaseDatos($conn);
+
+    $id_escapado = mysqli_real_escape_string($conn, $id);
+
+    $sqlActualizar = "UPDATE usuarios SET activo = 0 WHERE id_usuario = '$id_escapado'";
+
+    $resultado = editarDatos($conn, $sqlActualizar);
 
     cerrarConexion($conn);
 
-    if ($resultado['success']) {
+    if ($resultado) {
         respuestaExito(['mensaje' => 'Usuario desactivado exitosamente']);
     } else {
-        respuestaError('Error al desactivar usuario: ' . $resultado['error']);
+        respuestaError('Error al desactivar usuario');
     }
 }
 
@@ -241,23 +271,27 @@ function cambiarEstadoUsuario($datos) {
         return;
     }
 
-    $conn = obtenerConexion();
+    $conn = abrirConexion();
     if (!$conn) {
         respuestaError('Error de conexión a la base de datos');
         return;
     }
 
-    $nuevoEstado = isset($datos['activo']) ? intval($datos['activo']) : 1;
+    seleccionarBaseDatos($conn);
 
-    $sqlActualizar = "UPDATE usuarios SET activo = ? WHERE id_usuario = ?";
-    $resultado = ejecutarModificacion($conn, $sqlActualizar, "ii", [$nuevoEstado, $datos['id_usuario']]);
+    $nuevoEstado = isset($datos['activo']) ? intval($datos['activo']) : 1;
+    $id_usuario_escapado = mysqli_real_escape_string($conn, $datos['id_usuario']);
+
+    $sqlActualizar = "UPDATE usuarios SET activo = $nuevoEstado WHERE id_usuario = '$id_usuario_escapado'";
+
+    $resultado = editarDatos($conn, $sqlActualizar);
 
     cerrarConexion($conn);
 
-    if ($resultado['success']) {
+    if ($resultado) {
         respuestaExito(['mensaje' => 'Estado de usuario actualizado exitosamente']);
     } else {
-        respuestaError('Error al actualizar estado: ' . $resultado['error']);
+        respuestaError('Error al actualizar estado');
     }
 }
 ?>

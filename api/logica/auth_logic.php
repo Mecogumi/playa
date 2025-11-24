@@ -1,6 +1,7 @@
 <?php
-require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../acceder_base_datos.php';
 require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/../../config.inc.php';
 
 function login($datos) {
     if (empty($datos['usuario']) || empty($datos['contrasena'])) {
@@ -8,25 +9,26 @@ function login($datos) {
         return;
     }
 
-    $conn = obtenerConexion();
+    $conn = abrirConexion();
     if (!$conn) {
         respuestaError('Error de conexión a la base de datos');
         return;
     }
 
+    seleccionarBaseDatos($conn);
+
+    $usuario_escapado = mysqli_real_escape_string($conn, $datos['usuario']);
     $sql = "SELECT id_usuario, nombre_usuario, contrasena, nombre_completo, email, telefono, tipo_usuario, activo
             FROM usuarios
-            WHERE nombre_usuario = ? AND activo = 1";
+            WHERE nombre_usuario = '$usuario_escapado' AND activo = 1";
 
-    $resultado = ejecutarConsulta($conn, $sql, "s", [$datos['usuario']]);
+    $usuario = extraerRegistro($conn, $sql);
 
-    if (empty($resultado)) {
+    if (empty($usuario)) {
         cerrarConexion($conn);
         respuestaError('Credenciales incorrectas. Por favor verifica tu usuario y contraseña.');
         return;
     }
-
-    $usuario = $resultado[0];
 
     if (!verificarContrasena($datos['contrasena'], $usuario['contrasena'])) {
         cerrarConexion($conn);
@@ -109,45 +111,44 @@ function registrarUsuario($datos) {
         return;
     }
 
-    $conn = obtenerConexion();
+    $conn = abrirConexion();
     if (!$conn) {
         respuestaError('Error de conexión a la base de datos');
         return;
     }
 
-    $sqlVerificar = "SELECT id_usuario FROM usuarios WHERE nombre_usuario = ? OR email = ?";
-    $resultado = ejecutarConsulta($conn, $sqlVerificar, "ss", [$datos['usuario'], $datos['email']]);
+    seleccionarBaseDatos($conn);
 
-    if (!empty($resultado)) {
+    $usuario_escapado = mysqli_real_escape_string($conn, $datos['usuario']);
+    $email_escapado = mysqli_real_escape_string($conn, $datos['email']);
+    $sqlVerificar = "SELECT id_usuario FROM usuarios WHERE nombre_usuario = '$usuario_escapado' OR email = '$email_escapado'";
+
+    if (existeRegistro($conn, $sqlVerificar)) {
         cerrarConexion($conn);
         respuestaError('El nombre de usuario o email ya están registrados');
         return;
     }
 
     $hashContrasena = hashearContrasena($datos['contrasena']);
+    $nombre_completo_escapado = mysqli_real_escape_string($conn, $datos['nombre_completo']);
+    $hash_escapado = mysqli_real_escape_string($conn, $hashContrasena);
+    $telefono_escapado = isset($datos['telefono']) ? mysqli_real_escape_string($conn, $datos['telefono']) : '';
 
     $sqlInsertar = "INSERT INTO usuarios (nombre_usuario, contrasena, nombre_completo, email, telefono, tipo_usuario)
-                    VALUES (?, ?, ?, ?, ?, 'huesped')";
+                    VALUES ('$usuario_escapado', '$hash_escapado', '$nombre_completo_escapado', '$email_escapado', '$telefono_escapado', 'huesped')";
 
-    $telefono = isset($datos['telefono']) ? $datos['telefono'] : null;
+    $resultado = insertarDatos($conn, $sqlInsertar);
 
-    $resultado = ejecutarModificacion($conn, $sqlInsertar, "sssss", [
-        $datos['usuario'],
-        $hashContrasena,
-        $datos['nombre_completo'],
-        $datos['email'],
-        $telefono
-    ]);
-
-    cerrarConexion($conn);
-
-    if ($resultado['success']) {
+    if ($resultado) {
+        $id_insertado = mysqli_insert_id($conn);
+        cerrarConexion($conn);
         respuestaExito([
             'mensaje' => 'Usuario registrado exitosamente',
-            'id_usuario' => $resultado['id']
+            'id_usuario' => $id_insertado
         ]);
     } else {
-        respuestaError('Error al registrar usuario: ' . $resultado['error']);
+        cerrarConexion($conn);
+        respuestaError('Error al registrar usuario');
     }
 }
 ?>

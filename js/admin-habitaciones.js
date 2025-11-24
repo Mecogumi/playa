@@ -137,7 +137,7 @@ function mostrarImagenesActuales(imagenes) {
         const div = document.createElement('div');
         div.className = 'image-item';
         div.innerHTML = `
-            <img src="${img.ruta_archivo}" alt="Imagen">
+            <img src="${img.ruta_archivo}" alt="Imagen" onclick="establecerImagenPrincipal(${img.id_imagen}, ${habitacionEditando.id_habitacion})" style="cursor: pointer;" title="Clic para establecer como principal">
             ${img.es_principal ? '<span class="image-badge">Principal</span>' : ''}
             <button type="button" class="image-delete" onclick="eliminarImagen(${img.id_imagen})">✕</button>
         `;
@@ -270,6 +270,30 @@ async function eliminarImagen(idImagen) {
         }
     } catch (error) {
         console.error('Error:', error);
+    }
+}
+
+async function establecerImagenPrincipal(idImagen, idHabitacion) {
+    try {
+        const data = await fetchAutenticado(`${API_BASE}imagenes.php?accion=principal`, {
+            method: 'POST',
+            body: JSON.stringify({
+                id_imagen: idImagen,
+                id_habitacion: idHabitacion
+            })
+        });
+
+        if (data && data.success) {
+            mostrarAlerta('Imagen principal actualizada', 'success');
+            if (habitacionEditando) {
+                await editarHabitacion(habitacionEditando.id_habitacion);
+            }
+        } else {
+            mostrarAlerta(data ? data.error : 'Error al establecer imagen principal', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarAlerta('Error al establecer imagen principal', 'error');
     }
 }
 

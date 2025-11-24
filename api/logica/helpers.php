@@ -15,4 +15,16 @@ function respuestaError($mensaje, $codigo = 400) {
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }
+
+function validarEmail($email) {
+    return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
+}
+
+function hashearContrasena($contrasena) {
+    return password_hash($contrasena, PASSWORD_DEFAULT);
+}
+
+function verificarContrasena($contrasena, $hash) {
+    return password_verify($contrasena, $hash);
+}
 ?>

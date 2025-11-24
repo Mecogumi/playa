@@ -1,5 +1,6 @@
 <?php
-require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../../config.inc.php';
+require_once __DIR__ . '/../acceder_base_datos.php';
 require_once __DIR__ . '/helpers.php';
 
 function verificarAdmin() {
@@ -17,30 +18,54 @@ function verificarAdmin() {
 }
 
 function listarHabitaciones() {
-    $conn = obtenerConexion();
-    if (!$conn) {
-        respuestaError('Error de conexión a la base de datos');
-        return;
-    }
+    $conn = abrirConexion();
+    seleccionarBaseDatos($conn);
 
     $mostrarTodas = isset($_SESSION['usuario_tipo']) && $_SESSION['usuario_tipo'] === 'admin';
 
     if ($mostrarTodas) {
-        $sql = "SELECT * FROM vista_habitaciones_completa ORDER BY activo DESC, nombre_categoria, precio_noche";
+        $sql = "SELECT * FROM vista_habitaciones_completa ORDER BY numero_habitacion";
     } else {
-        $sql = "SELECT * FROM vista_habitaciones_completa WHERE activo = 1 ORDER BY nombre_categoria, precio_noche";
+        $sql = "SELECT * FROM vista_habitaciones_completa WHERE activo = 1 ORDER BY numero_habitacion";
     }
 
-    $habitaciones = ejecutarConsulta($conn, $sql);
+    $result = mysqli_query($conn, $sql);
 
-    foreach ($habitaciones as &$habitacion) {
+    if (!$result) {
+        cerrarConexion($conn);
+        respuestaError('Error al obtener habitaciones');
+        return;
+    }
+
+    $habitaciones = array();
+    while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+        $row['activo'] = intval($row['activo']);
+        $row['id_habitacion'] = intval($row['id_habitacion']);
+
+        $idHabitacion = mysqli_real_escape_string($conn, $row['id_habitacion']);
+
         $sqlImagenes = "SELECT id_imagen, nombre_archivo, ruta_archivo, es_principal, orden_visualizacion
                         FROM imagenes_habitacion
-                        WHERE id_habitacion = ?
+                        WHERE id_habitacion = '$idHabitacion'
                         ORDER BY es_principal DESC, orden_visualizacion";
-        $habitacion['imagenes'] = ejecutarConsulta($conn, $sqlImagenes, "i", [$habitacion['id_habitacion']]);
+
+        $resultImagenes = mysqli_query($conn, $sqlImagenes);
+        $imagenes = array();
+
+        if ($resultImagenes) {
+            while ($imagen = mysqli_fetch_array($resultImagenes, MYSQLI_ASSOC)) {
+                $imagen['es_principal'] = intval($imagen['es_principal']);
+                $imagen['id_imagen'] = intval($imagen['id_imagen']);
+                $imagenes[] = $imagen;
+            }
+            mysqli_free_result($resultImagenes);
+        }
+
+        $row['imagenes'] = $imagenes;
+        $habitaciones[] = $row;
     }
 
+    mysqli_free_result($result);
     cerrarConexion($conn);
 
     respuestaExito(['habitaciones' => $habitaciones]);
@@ -52,29 +77,41 @@ function obtenerHabitacion($id) {
         return;
     }
 
-    $conn = obtenerConexion();
-    if (!$conn) {
-        respuestaError('Error de conexión a la base de datos');
-        return;
-    }
+    $conn = abrirConexion();
+    seleccionarBaseDatos($conn);
 
-    $sql = "SELECT * FROM vista_habitaciones_completa WHERE id_habitacion = ?";
-    $resultado = ejecutarConsulta($conn, $sql, "i", [$id]);
+    $idEscapado = mysqli_real_escape_string($conn, $id);
+    $sql = "SELECT * FROM vista_habitaciones_completa WHERE id_habitacion = '$idEscapado'";
 
-    if (empty($resultado)) {
+    $habitacion = extraerRegistro($conn, $sql);
+
+    if (empty($habitacion)) {
         cerrarConexion($conn);
         respuestaError('Habitación no encontrada', 404);
         return;
     }
 
-    $habitacion = $resultado[0];
+    $habitacion['activo'] = intval($habitacion['activo']);
+    $habitacion['id_habitacion'] = intval($habitacion['id_habitacion']);
 
     $sqlImagenes = "SELECT id_imagen, nombre_archivo, ruta_archivo, es_principal, orden_visualizacion
                     FROM imagenes_habitacion
-                    WHERE id_habitacion = ?
+                    WHERE id_habitacion = '$idEscapado'
                     ORDER BY es_principal DESC, orden_visualizacion";
-    $habitacion['imagenes'] = ejecutarConsulta($conn, $sqlImagenes, "i", [$id]);
 
+    $resultImagenes = mysqli_query($conn, $sqlImagenes);
+    $imagenes = array();
+
+    if ($resultImagenes) {
+        while ($imagen = mysqli_fetch_array($resultImagenes, MYSQLI_ASSOC)) {
+            $imagen['es_principal'] = intval($imagen['es_principal']);
+            $imagen['id_imagen'] = intval($imagen['id_imagen']);
+            $imagenes[] = $imagen;
+        }
+        mysqli_free_result($resultImagenes);
+    }
+
+    $habitacion['imagenes'] = $imagenes;
     cerrarConexion($conn);
 
     respuestaExito(['habitacion' => $habitacion]);
@@ -88,45 +125,43 @@ function crearHabitacion($datos) {
         return;
     }
 
-    $conn = obtenerConexion();
-    if (!$conn) {
-        respuestaError('Error de conexión a la base de datos');
-        return;
-    }
+    $conn = abrirConexion();
+    seleccionarBaseDatos($conn);
 
-    $sqlVerificar = "SELECT id_habitacion FROM habitaciones WHERE numero_habitacion = ?";
-    $resultado = ejecutarConsulta($conn, $sqlVerificar, "s", [$datos['numero_habitacion']]);
+    $numeroHabitacion = mysqli_real_escape_string($conn, $datos['numero_habitacion']);
+    $sqlVerificar = "SELECT id_habitacion FROM habitaciones WHERE numero_habitacion = '$numeroHabitacion'";
 
-    if (!empty($resultado)) {
+    if (existeRegistro($conn, $sqlVerificar)) {
         cerrarConexion($conn);
         respuestaError('El número de habitación ya existe');
         return;
     }
 
+    $idCategoria = mysqli_real_escape_string($conn, $datos['id_categoria']);
+    $nombre = mysqli_real_escape_string($conn, $datos['nombre']);
+    $descripcion = isset($datos['descripcion']) ? mysqli_real_escape_string($conn, $datos['descripcion']) : '';
+    $precioNoche = mysqli_real_escape_string($conn, $datos['precio_noche']);
+    $capacidadPersonas = mysqli_real_escape_string($conn, $datos['capacidad_personas']);
+    $cantidadDisponible = mysqli_real_escape_string($conn, $datos['cantidad_disponible']);
+    $caracteristicas = isset($datos['caracteristicas']) ? mysqli_real_escape_string($conn, $datos['caracteristicas']) : '';
+
     $sqlInsertar = "INSERT INTO habitaciones (numero_habitacion, id_categoria, nombre, descripcion,
                     precio_noche, capacidad_personas, cantidad_disponible, caracteristicas)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                    VALUES ('$numeroHabitacion', '$idCategoria', '$nombre', '$descripcion',
+                    '$precioNoche', '$capacidadPersonas', '$cantidadDisponible', '$caracteristicas')";
 
-    $resultado = ejecutarModificacion($conn, $sqlInsertar, "sissdiis", [
-        $datos['numero_habitacion'],
-        $datos['id_categoria'],
-        $datos['nombre'],
-        isset($datos['descripcion']) ? $datos['descripcion'] : '',
-        $datos['precio_noche'],
-        $datos['capacidad_personas'],
-        $datos['cantidad_disponible'],
-        isset($datos['caracteristicas']) ? $datos['caracteristicas'] : ''
-    ]);
+    $resultado = insertarDatos($conn, $sqlInsertar);
 
-    cerrarConexion($conn);
-
-    if ($resultado['success']) {
+    if ($resultado) {
+        $idHabitacion = mysqli_insert_id($conn);
+        cerrarConexion($conn);
         respuestaExito([
             'mensaje' => 'Habitación creada exitosamente',
-            'id_habitacion' => $resultado['id']
+            'id_habitacion' => $idHabitacion
         ]);
     } else {
-        respuestaError('Error al crear habitación: ' . $resultado['error']);
+        cerrarConexion($conn);
+        respuestaError('Error al crear habitación');
     }
 }
 
@@ -136,38 +171,37 @@ function actualizarHabitacion($datos) {
         return;
     }
 
-    $conn = obtenerConexion();
-    if (!$conn) {
-        respuestaError('Error de conexión a la base de datos');
-        return;
-    }
+    $conn = abrirConexion();
+    seleccionarBaseDatos($conn);
+
+    $idHabitacion = mysqli_real_escape_string($conn, $datos['id_habitacion']);
+    $idCategoria = mysqli_real_escape_string($conn, $datos['id_categoria']);
+    $nombre = mysqli_real_escape_string($conn, $datos['nombre']);
+    $descripcion = isset($datos['descripcion']) ? mysqli_real_escape_string($conn, $datos['descripcion']) : '';
+    $precioNoche = mysqli_real_escape_string($conn, $datos['precio_noche']);
+    $capacidadPersonas = mysqli_real_escape_string($conn, $datos['capacidad_personas']);
+    $cantidadDisponible = mysqli_real_escape_string($conn, $datos['cantidad_disponible']);
+    $caracteristicas = isset($datos['caracteristicas']) ? mysqli_real_escape_string($conn, $datos['caracteristicas']) : '';
+    $activo = isset($datos['activo']) ? intval($datos['activo']) : 1;
 
     $sqlActualizar = "UPDATE habitaciones SET
-                      id_categoria = ?, nombre = ?, descripcion = ?,
-                      precio_noche = ?, capacidad_personas = ?,
-                      cantidad_disponible = ?, caracteristicas = ?, activo = ?
-                      WHERE id_habitacion = ?";
+                      id_categoria = '$idCategoria',
+                      nombre = '$nombre',
+                      descripcion = '$descripcion',
+                      precio_noche = '$precioNoche',
+                      capacidad_personas = '$capacidadPersonas',
+                      cantidad_disponible = '$cantidadDisponible',
+                      caracteristicas = '$caracteristicas',
+                      activo = $activo
+                      WHERE id_habitacion = '$idHabitacion'";
 
-    $activo = isset($datos['activo']) ? $datos['activo'] : 1;
-
-    $resultado = ejecutarModificacion($conn, $sqlActualizar, "issdiisii", [
-        $datos['id_categoria'],
-        $datos['nombre'],
-        isset($datos['descripcion']) ? $datos['descripcion'] : '',
-        $datos['precio_noche'],
-        $datos['capacidad_personas'],
-        $datos['cantidad_disponible'],
-        isset($datos['caracteristicas']) ? $datos['caracteristicas'] : '',
-        $activo,
-        $datos['id_habitacion']
-    ]);
-
+    $resultado = editarDatos($conn, $sqlActualizar);
     cerrarConexion($conn);
 
-    if ($resultado['success']) {
+    if ($resultado) {
         respuestaExito(['mensaje' => 'Habitación actualizada exitosamente']);
     } else {
-        respuestaError('Error al actualizar habitación: ' . $resultado['error']);
+        respuestaError('Error al actualizar habitación');
     }
 }
 
@@ -178,30 +212,26 @@ function eliminarHabitacion($id) {
         return;
     }
 
-    $conn = obtenerConexion();
-    if (!$conn) {
-        respuestaError('Error de conexión a la base de datos');
-        return;
-    }
+    $conn = abrirConexion();
+    seleccionarBaseDatos($conn);
 
-    $sqlActualizar = "UPDATE habitaciones SET activo = 0 WHERE id_habitacion = ?";
-    $resultado = ejecutarModificacion($conn, $sqlActualizar, "i", [$id]);
+    $idEscapado = mysqli_real_escape_string($conn, $id);
+    $sqlActualizar = "UPDATE habitaciones SET activo = 0 WHERE id_habitacion = '$idEscapado'";
 
+    $resultado = editarDatos($conn, $sqlActualizar);
     cerrarConexion($conn);
 
-    if ($resultado['success']) {
+    if ($resultado) {
         respuestaExito(['mensaje' => 'Habitación eliminada exitosamente']);
     } else {
-        respuestaError('Error al eliminar habitación: ' . $resultado['error']);
+        respuestaError('Error al eliminar habitación');
     }
 }
 
 function listarPorCategoria($idCategoria) {
-    $conn = obtenerConexion();
-    if (!$conn) {
-        respuestaError('Error de conexión a la base de datos');
-        return;
-    }
+    $conn = abrirConexion();
+    seleccionarBaseDatos($conn);
+
     $mostrarTodas = isset($_SESSION['usuario_tipo']) && $_SESSION['usuario_tipo'] === 'admin';
 
     if ($mostrarTodas) {
@@ -211,32 +241,57 @@ function listarPorCategoria($idCategoria) {
     }
 
     if ($idCategoria > 0) {
-        $sql .= " AND id_categoria = ?";
-        $habitaciones = ejecutarConsulta($conn, $sql, "i", [$idCategoria]);
-    } else {
-        $sql .= " ORDER BY nombre_categoria, precio_noche";
-        $habitaciones = ejecutarConsulta($conn, $sql);
+        $idCategoriaEscapado = mysqli_real_escape_string($conn, $idCategoria);
+        $sql .= " AND id_categoria = '$idCategoriaEscapado'";
     }
 
-    foreach ($habitaciones as &$habitacion) {
+    $sql .= " ORDER BY numero_habitacion";
+
+    $result = mysqli_query($conn, $sql);
+
+    if (!$result) {
+        cerrarConexion($conn);
+        respuestaError('Error al obtener habitaciones');
+        return;
+    }
+
+    $habitaciones = array();
+    while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+        $row['activo'] = intval($row['activo']);
+        $row['id_habitacion'] = intval($row['id_habitacion']);
+
+        $idHabitacion = mysqli_real_escape_string($conn, $row['id_habitacion']);
+
         $sqlImagenes = "SELECT id_imagen, nombre_archivo, ruta_archivo, es_principal
                         FROM imagenes_habitacion
-                        WHERE id_habitacion = ?
+                        WHERE id_habitacion = '$idHabitacion'
                         ORDER BY es_principal DESC, orden_visualizacion";
-        $habitacion['imagenes'] = ejecutarConsulta($conn, $sqlImagenes, "i", [$habitacion['id_habitacion']]);
+
+        $resultImagenes = mysqli_query($conn, $sqlImagenes);
+        $imagenes = array();
+
+        if ($resultImagenes) {
+            while ($imagen = mysqli_fetch_array($resultImagenes, MYSQLI_ASSOC)) {
+                $imagen['es_principal'] = intval($imagen['es_principal']);
+                $imagen['id_imagen'] = intval($imagen['id_imagen']);
+                $imagenes[] = $imagen;
+            }
+            mysqli_free_result($resultImagenes);
+        }
+
+        $row['imagenes'] = $imagenes;
+        $habitaciones[] = $row;
     }
 
+    mysqli_free_result($result);
     cerrarConexion($conn);
 
     respuestaExito(['habitaciones' => $habitaciones]);
 }
 
 function listarCategorias() {
-    $conn = obtenerConexion();
-    if (!$conn) {
-        respuestaError('Error de conexión a la base de datos');
-        return;
-    }
+    $conn = abrirConexion();
+    seleccionarBaseDatos($conn);
 
     $sql = "SELECT c.*, COUNT(h.id_habitacion) as total_habitaciones
             FROM categorias_habitacion c
@@ -244,8 +299,20 @@ function listarCategorias() {
             GROUP BY c.id_categoria
             ORDER BY c.nombre_categoria";
 
-    $categorias = ejecutarConsulta($conn, $sql);
+    $result = mysqli_query($conn, $sql);
 
+    if (!$result) {
+        cerrarConexion($conn);
+        respuestaError('Error al obtener categorías');
+        return;
+    }
+
+    $categorias = array();
+    while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+        $categorias[] = $row;
+    }
+
+    mysqli_free_result($result);
     cerrarConexion($conn);
 
     respuestaExito(['categorias' => $categorias]);
@@ -257,51 +324,72 @@ function buscarHabitaciones($termino) {
         return;
     }
 
-    $conn = obtenerConexion();
-    if (!$conn) {
-        respuestaError('Error de conexión a la base de datos');
-        return;
-    }
+    $conn = abrirConexion();
+    seleccionarBaseDatos($conn);
 
-    $terminoBusqueda = '%' . $termino . '%';
+    $terminoBusqueda = mysqli_real_escape_string($conn, '%' . $termino . '%');
 
     $mostrarTodas = isset($_SESSION['usuario_tipo']) && $_SESSION['usuario_tipo'] === 'admin';
 
     if ($mostrarTodas) {
         $sql = "SELECT * FROM vista_habitaciones_completa
                 WHERE (
-                    nombre LIKE ? OR
-                    descripcion LIKE ? OR
-                    caracteristicas LIKE ? OR
-                    nombre_categoria LIKE ? OR
-                    numero_habitacion LIKE ?
+                    nombre LIKE '$terminoBusqueda' OR
+                    descripcion LIKE '$terminoBusqueda' OR
+                    caracteristicas LIKE '$terminoBusqueda' OR
+                    nombre_categoria LIKE '$terminoBusqueda' OR
+                    numero_habitacion LIKE '$terminoBusqueda'
                 )
-                ORDER BY activo DESC, nombre_categoria, precio_noche";
+                ORDER BY numero_habitacion";
     } else {
         $sql = "SELECT * FROM vista_habitaciones_completa
                 WHERE activo = 1 AND (
-                    nombre LIKE ? OR
-                    descripcion LIKE ? OR
-                    caracteristicas LIKE ? OR
-                    nombre_categoria LIKE ? OR
-                    numero_habitacion LIKE ?
+                    nombre LIKE '$terminoBusqueda' OR
+                    descripcion LIKE '$terminoBusqueda' OR
+                    caracteristicas LIKE '$terminoBusqueda' OR
+                    nombre_categoria LIKE '$terminoBusqueda' OR
+                    numero_habitacion LIKE '$terminoBusqueda'
                 )
-                ORDER BY nombre_categoria, precio_noche";
+                ORDER BY numero_habitacion";
     }
 
-    $habitaciones = ejecutarConsulta($conn, $sql, "sssss", [
-        $terminoBusqueda, $terminoBusqueda, $terminoBusqueda,
-        $terminoBusqueda, $terminoBusqueda
-    ]);
+    $result = mysqli_query($conn, $sql);
 
-    foreach ($habitaciones as &$habitacion) {
+    if (!$result) {
+        cerrarConexion($conn);
+        respuestaError('Error al buscar habitaciones');
+        return;
+    }
+
+    $habitaciones = array();
+    while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+        $row['activo'] = intval($row['activo']);
+        $row['id_habitacion'] = intval($row['id_habitacion']);
+
+        $idHabitacion = mysqli_real_escape_string($conn, $row['id_habitacion']);
+
         $sqlImagenes = "SELECT id_imagen, nombre_archivo, ruta_archivo, es_principal
                         FROM imagenes_habitacion
-                        WHERE id_habitacion = ?
+                        WHERE id_habitacion = '$idHabitacion'
                         ORDER BY es_principal DESC, orden_visualizacion";
-        $habitacion['imagenes'] = ejecutarConsulta($conn, $sqlImagenes, "i", [$habitacion['id_habitacion']]);
+
+        $resultImagenes = mysqli_query($conn, $sqlImagenes);
+        $imagenes = array();
+
+        if ($resultImagenes) {
+            while ($imagen = mysqli_fetch_array($resultImagenes, MYSQLI_ASSOC)) {
+                $imagen['es_principal'] = intval($imagen['es_principal']);
+                $imagen['id_imagen'] = intval($imagen['id_imagen']);
+                $imagenes[] = $imagen;
+            }
+            mysqli_free_result($resultImagenes);
+        }
+
+        $row['imagenes'] = $imagenes;
+        $habitaciones[] = $row;
     }
 
+    mysqli_free_result($result);
     cerrarConexion($conn);
 
     respuestaExito([

@@ -251,11 +251,23 @@ function mostrarModalDetalles(habitacion) {
 
     let imagenesHTML = '';
     if (habitacion.imagenes && habitacion.imagenes.length > 0) {
-        imagenesHTML = '<div class="images-gallery">';
-        habitacion.imagenes.forEach(img => {
-            imagenesHTML += `<div class="image-item"><img src="${img.ruta_archivo}" alt="${sanitizarHTML(habitacion.nombre)}"></div>`;
-        });
-        imagenesHTML += '</div>';
+        const imagenPrincipal = habitacion.imagenes.find(img => img.es_principal) || habitacion.imagenes[0];
+
+        imagenesHTML = `
+            <div class="product-gallery">
+                <div class="main-image-container">
+                    <img id="mainImage" src="${imagenPrincipal.ruta_archivo}" alt="${sanitizarHTML(habitacion.nombre)}" class="main-image">
+                </div>
+                <div class="thumbnails-container">
+                    ${habitacion.imagenes.map(img => `
+                        <div class="thumbnail ${img.id_imagen === imagenPrincipal.id_imagen ? 'active' : ''}"
+                             onclick="cambiarImagenPrincipal('${img.ruta_archivo}', this)">
+                            <img src="${img.ruta_archivo}" alt="${sanitizarHTML(habitacion.nombre)}">
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
     }
 
     modalBody.innerHTML = `
@@ -280,6 +292,20 @@ function mostrarModalDetalles(habitacion) {
     `;
 
     modal.classList.add('active');
+}
+
+function cambiarImagenPrincipal(rutaImagen, thumbnailElement) {
+    const mainImage = document.getElementById('mainImage');
+    if (mainImage) {
+        mainImage.src = rutaImagen;
+    }
+
+    const thumbnails = document.querySelectorAll('.thumbnail');
+    thumbnails.forEach(thumb => thumb.classList.remove('active'));
+
+    if (thumbnailElement) {
+        thumbnailElement.classList.add('active');
+    }
 }
 
 async function agregarHabitacionAlCarrito(idHabitacion) {

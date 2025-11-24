@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../acceder_base_datos.php';
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/../../config.inc.php';
 
@@ -16,16 +16,13 @@ function subirImagenes() {
         return;
     }
 
-    $conn = obtenerConexion();
-    if (!$conn) {
-        respuestaError('Error de conexión a la base de datos');
-        return;
-    }
+    $conn = abrirConexion();
+    seleccionarBaseDatos($conn);
 
-    $sqlVerificar = "SELECT id_habitacion FROM habitaciones WHERE id_habitacion = ?";
-    $resultado = ejecutarConsulta($conn, $sqlVerificar, "i", [$idHabitacion]);
+    $idHabitacionEscaped = mysqli_real_escape_string($conn, $idHabitacion);
+    $sqlVerificar = "SELECT id_habitacion FROM habitaciones WHERE id_habitacion = '$idHabitacionEscaped'";
 
-    if (empty($resultado)) {
+    if (!existeRegistro($conn, $sqlVerificar)) {
         cerrarConexion($conn);
         respuestaError('La habitación no existe');
         return;
@@ -40,9 +37,9 @@ function subirImagenes() {
     $archivosSubidos = [];
     $errores = [];
 
-    $sqlVerificarPrincipal = "SELECT COUNT(*) as total FROM imagenes_habitacion WHERE id_habitacion = ? AND es_principal = 1";
-    $resultadoPrincipal = ejecutarConsulta($conn, $sqlVerificarPrincipal, "i", [$idHabitacion]);
-    $hayPrincipal = $resultadoPrincipal[0]['total'] > 0;
+    $sqlVerificarPrincipal = "SELECT COUNT(*) as total FROM imagenes_habitacion WHERE id_habitacion = '$idHabitacionEscaped' AND es_principal = 1";
+    $resultadoPrincipal = extraerRegistro($conn, $sqlVerificarPrincipal);
+    $hayPrincipal = ($resultadoPrincipal && $resultadoPrincipal['total'] > 0);
 
     $totalArchivos = count($_FILES['imagenes']['name']);
 
@@ -73,20 +70,19 @@ function subirImagenes() {
 
                 $esPrincipal = (!$hayPrincipal && $i === 0) ? 1 : 0;
 
+                $nombreNuevoEscaped = mysqli_real_escape_string($conn, $nombreNuevo);
+                $rutaRelativaEscaped = mysqli_real_escape_string($conn, $rutaRelativa);
+
                 $sqlInsertar = "INSERT INTO imagenes_habitacion (id_habitacion, nombre_archivo, ruta_archivo, es_principal, orden_visualizacion)
-                                VALUES (?, ?, ?, ?, ?)";
+                                VALUES ('$idHabitacionEscaped', '$nombreNuevoEscaped', '$rutaRelativaEscaped', $esPrincipal, $i)";
 
-                $resultadoInsertar = ejecutarModificacion($conn, $sqlInsertar, "issii", [
-                    $idHabitacion,
-                    $nombreNuevo,
-                    $rutaRelativa,
-                    $esPrincipal,
-                    $i
-                ]);
+                $resultadoInsertar = insertarDatos($conn, $sqlInsertar);
 
-                if ($resultadoInsertar['success']) {
+                if ($resultadoInsertar) {
+                    $idInsertado = mysqli_insert_id($conn);
+
                     $archivosSubidos[] = [
-                        'id' => $resultadoInsertar['id'],
+                        'id' => $idInsertado,
                         'nombre' => $nombreNuevo,
                         'ruta' => $rutaRelativa,
                         'es_principal' => $esPrincipal
@@ -126,43 +122,41 @@ function eliminarImagen($id) {
         return;
     }
 
-    $conn = obtenerConexion();
-    if (!$conn) {
-        respuestaError('Error de conexión a la base de datos');
-        return;
-    }
+    $conn = abrirConexion();
+    seleccionarBaseDatos($conn);
 
-    $sqlObtener = "SELECT id_imagen, id_habitacion, ruta_archivo, es_principal FROM imagenes_habitacion WHERE id_imagen = ?";
-    $resultado = ejecutarConsulta($conn, $sqlObtener, "i", [$id]);
+    $idEscaped = mysqli_real_escape_string($conn, $id);
+    $sqlObtener = "SELECT id_imagen, id_habitacion, ruta_archivo, es_principal FROM imagenes_habitacion WHERE id_imagen = '$idEscaped'";
 
-    if (empty($resultado)) {
+    $imagen = extraerRegistro($conn, $sqlObtener);
+
+    if (empty($imagen)) {
         cerrarConexion($conn);
         respuestaError('Imagen no encontrada', 404);
         return;
     }
-
-    $imagen = $resultado[0];
 
     $rutaArchivo = __DIR__ . '/../../' . $imagen['ruta_archivo'];
     if (file_exists($rutaArchivo)) {
         unlink($rutaArchivo);
     }
 
-    $sqlEliminar = "DELETE FROM imagenes_habitacion WHERE id_imagen = ?";
-    $resultadoEliminar = ejecutarModificacion($conn, $sqlEliminar, "i", [$id]);
+    $sqlEliminar = "DELETE FROM imagenes_habitacion WHERE id_imagen = '$idEscaped'";
+    $resultadoEliminar = borrarDatos($conn, $sqlEliminar);
 
     if ($imagen['es_principal'] == 1) {
+        $idHabitacionEscaped = mysqli_real_escape_string($conn, $imagen['id_habitacion']);
         $sqlNuevaPrincipal = "UPDATE imagenes_habitacion
                               SET es_principal = 1
-                              WHERE id_habitacion = ?
+                              WHERE id_habitacion = '$idHabitacionEscaped'
                               ORDER BY orden_visualizacion
                               LIMIT 1";
-        ejecutarModificacion($conn, $sqlNuevaPrincipal, "i", [$imagen['id_habitacion']]);
+        editarDatos($conn, $sqlNuevaPrincipal);
     }
 
     cerrarConexion($conn);
 
-    if ($resultadoEliminar['success']) {
+    if ($resultadoEliminar) {
         respuestaExito(['mensaje' => 'Imagen eliminada exitosamente']);
     } else {
         respuestaError('Error al eliminar imagen');
@@ -175,21 +169,21 @@ function establecerImagenPrincipal($datos) {
         return;
     }
 
-    $conn = obtenerConexion();
-    if (!$conn) {
-        respuestaError('Error de conexión a la base de datos');
-        return;
-    }
+    $conn = abrirConexion();
+    seleccionarBaseDatos($conn);
 
-    $sqlQuitar = "UPDATE imagenes_habitacion SET es_principal = 0 WHERE id_habitacion = ?";
-    ejecutarModificacion($conn, $sqlQuitar, "i", [$datos['id_habitacion']]);
+    $idHabitacionEscaped = mysqli_real_escape_string($conn, $datos['id_habitacion']);
+    $idImagenEscaped = mysqli_real_escape_string($conn, $datos['id_imagen']);
 
-    $sqlEstablecer = "UPDATE imagenes_habitacion SET es_principal = 1 WHERE id_imagen = ?";
-    $resultado = ejecutarModificacion($conn, $sqlEstablecer, "i", [$datos['id_imagen']]);
+    $sqlQuitar = "UPDATE imagenes_habitacion SET es_principal = 0 WHERE id_habitacion = '$idHabitacionEscaped'";
+    editarDatos($conn, $sqlQuitar);
+
+    $sqlEstablecer = "UPDATE imagenes_habitacion SET es_principal = 1 WHERE id_imagen = '$idImagenEscaped'";
+    $resultado = editarDatos($conn, $sqlEstablecer);
 
     cerrarConexion($conn);
 
-    if ($resultado['success']) {
+    if ($resultado) {
         respuestaExito(['mensaje' => 'Imagen principal establecida exitosamente']);
     } else {
         respuestaError('Error al establecer imagen principal');
